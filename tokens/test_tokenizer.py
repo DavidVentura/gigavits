@@ -4,7 +4,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from remap import LayoutError, remap, remap_ids, teacher_input
-from tokenizer import NotNfd, Table, UnknownSymbol, UnsupportedLanguage, symbol_ids, tokenize
+from tokenizer import NotNfd, Table, UnknownSymbol, UnsupportedLanguage, piper_input, symbol_ids, tokenize
 
 HERE = Path(__file__).resolve().parent
 CORPUS_PATH = HERE.parent / "coverage" / "work" / "phonemized.jsonl"
@@ -23,20 +23,22 @@ SYLLABIC = "̩"
 
 TABLE: Table
 KEY_BY_ID: dict[int, str]
-CORPUS: dict[tuple[str, int], str]
+CORPUS: dict[tuple[str, int], str]  # as piper-rs feeds it (trimmed)
+RAW: dict[tuple[str, int], str]  # as espeak_phonemize returns it
 
 
 def setUpModule():
-    global TABLE, KEY_BY_ID, CORPUS
+    global TABLE, KEY_BY_ID, CORPUS, RAW
     TABLE = Table.load(HERE / "table.json")
     KEY_BY_ID = {v: k for k, v in TABLE.ids.items()}
     if not CORPUS_PATH.exists():
         raise FileNotFoundError(f"{CORPUS_PATH} is missing; run coverage/run.sh")
-    CORPUS = {}
+    CORPUS, RAW = {}, {}
     with CORPUS_PATH.open(encoding="utf-8") as f:
         for line in f:
             r = json.loads(line)
-            CORPUS[(r["run"], r["idx"])] = r["phonemes"]
+            RAW[(r["run"], r["idx"])] = r["phonemes"]
+            CORPUS[(r["run"], r["idx"])] = piper_input(r["phonemes"])
 
 
 def replaced(excerpt: str, replacements: dict[int, str]) -> list[str]:
@@ -113,7 +115,7 @@ class SpecialCases(unittest.TestCase):
         self.assertExcerpt("lv", 5, "ˈuz-ʋareːt", {3: EXTRA_SHORT})
 
     def test_korean_fortis(self):
-        self.assertExcerpt("ko", 0, "ndweˌʌt-t-ɐ. ", {7: FORTIS, 9: FORTIS})
+        self.assertExcerpt("ko", 0, "ndweˌʌt-t-ɐ.", {7: FORTIS, 9: FORTIS})
         self.assertExcerpt("ko", 2, "qiqˌɐ q-ˈɯnnɐn", {7: FORTIS})
 
     def test_french_clitic_vowels(self):
@@ -156,9 +158,10 @@ class Rejections(unittest.TestCase):
         self.assertUnknown("ˈa-a", "de", "-")
         self.assertUnknown("ˈb2a", "vi", "2")
 
-    def test_clause_punctuation_needs_the_following_space(self):
+    def test_clause_punctuation_needs_the_following_space_or_the_end(self):
         self.assertUnknown("ˈa,b", "de", ",")
-        self.assertUnknown("ˈa.", "de", ".")
+        self.assertUnknown("ˈa.b", "de", ".")
+        self.assertEqual(symbol_ids("ˈa.", TABLE.language("de"), TABLE)[-1], TABLE.ids["."])
 
     def test_unknown_character(self):
         self.assertUnknown("ˈa§b", "de", "§")
@@ -196,6 +199,10 @@ class FullCorpus(unittest.TestCase):
                 continue
             checked[run] += 1
             self.assertEqual(len(ids), len(phonemes))
+            # trimming only drops the edge spaces: every other position keeps its token
+            raw = RAW[(run, idx)]
+            lead = len(raw) - len(raw.lstrip())
+            self.assertEqual(ids, symbol_ids(raw, TABLE.language(run), TABLE)[lead:lead + len(phonemes)], (run, idx))
             counts = Counter(ids)
             self.assertEqual(counts[TABLE.ids[" "]], phonemes.count(" "), (run, idx))
             for c in ",;:!":

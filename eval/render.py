@@ -95,7 +95,8 @@ class PiperOnnxRenderer:
     def render(self, request: RenderRequest) -> Rendered:
         if request.espeak != self.espeak:
             raise ValueError(f"{self.key} speaks {self.espeak}, asked for {request.espeak}")
-        teacher = tokens_module("remap").teacher_input(request.phonemes, self.phoneme_id_map)
+        piper_input = tokens_module("tokenizer").piper_input(request.phonemes)
+        teacher = tokens_module("remap").teacher_input(piper_input, self.phoneme_id_map)
         inputs = {
             "input": np.array([teacher.ids], dtype=np.int64),
             "input_lengths": np.array([len(teacher.ids)], dtype=np.int64),

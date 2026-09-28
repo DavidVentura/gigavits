@@ -1,0 +1,7 @@
+numpy==2.5.3
+onnx==1.23.0
+onnxruntime==1.24.4
+soundfile==0.14.0
+soxr==1.1.0
+pytest==9.1.1
+onnx-graphsurgeon==0.6.1

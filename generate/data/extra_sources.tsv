@@ -1,0 +1,3 @@
+# fp32 teacher sources the app catalogs lack (the app ships only an int8 MNN for these).
+path	url	size
+tts/1/ug/ug_CN/standard/medium/model.onnx	https://huggingface.co/willwade/mms-tts-multilingual-models-onnx/resolve/main/uig-script_arabic/model.onnx	114019332

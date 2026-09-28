@@ -38,7 +38,7 @@ class PhoneTable:
 
     def words_from_espeak(self, phonemes: str, espeak: str) -> list[Word]:
         tokenizer = tokens_module("tokenizer")
-        ids = tokenizer.symbol_ids(phonemes, self.table.language(espeak), self.table)
+        ids = tokenizer.symbol_ids(tokenizer.piper_input(phonemes), self.table.language(espeak), self.table)
         return reference_words([self.key_by_id[i] for i in ids], self.classes)
 
     def words_from_model_ids(self, phoneme_ids: Iterable[int]) -> list[Word]:

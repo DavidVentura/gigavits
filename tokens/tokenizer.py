@@ -3,10 +3,12 @@
 (Named tokenizer.py rather than tokenize.py: a local tokenize.py shadows the stdlib module that
 linecache/traceback import, which breaks every traceback printed from this directory.)
 
-Input is the string piper-rs builds in `espeak_phonemize`: for each espeak clause, the clause's IPA
-followed by the clause's terminating punctuation and one space ("<ipa><p> ", only when the clause
-had a terminator), sentence chunks joined with " ", then NFD. espeak's own IPA never contains text
-punctuation, so every character is phonetic except the terminators piper-rs appends.
+Input is the string piper-rs feeds a Piper voice: `espeak_phonemize` builds, for each espeak clause,
+the clause's IPA followed by the clause's terminating punctuation and one space ("<ipa><p> ", only
+when the clause had a terminator), joins sentence chunks with " ", applies NFD, and
+`PiperModel::synthesize_phonemes` then trims it (`piper_input` below). espeak's own IPA never
+contains text punctuation, so every character is phonetic except the terminators piper-rs appends.
+Tokenizing the trimmed string keeps student and teacher sequences position-aligned 1:1.
 
 Algorithm (the Rust port implements exactly this, driven by table.json):
 
@@ -17,10 +19,15 @@ For each character c at index i of the NFD input, for language L:
        table class is in `skip_classes`) is in `prev_chars` or has a table class in
        `prev_classes`; at least one of the two must hold when either is given.
      - `next_chars`: the character after i is in `next_chars`.
-2. Clause punctuation: c is in `clause_punctuation` and s[i+1] == ' '. Then:
+2. Clause punctuation: c is in `clause_punctuation` and is the last character (the trim removed
+   the space after the final terminator): punctuation. The trim makes this shape ambiguous too: a
+   clause without a terminator that ends in a phonetic '.' (bn "r." before a danda espeak does not
+   treat as a terminator) reads as punctuation; the terminator after a rule context (ar "a.") is
+   far more common. Tokenizing espeak-rs chunks instead of the joined string removes both.
+   Or c is in `clause_punctuation` and s[i+1] == ' '. Then:
      - if s[i+2] is ' ' or the end of the string, the clause ended a sentence chunk: punctuation;
      - otherwise (exactly one space, text continues), c is punctuation unless `rule` matched. This
-       is the only ambiguous shape: a word-final phonetic '.' (hi-family r., ar a. i. u.) looks
+       shape is ambiguous as well: a word-final phonetic '.' (hi-family r., ar a. i. u.) looks
        exactly like a mid-chunk clause terminator after the same letter.
    Punctuation emits the token whose key is c.
 3. Else if `rule` matched, emit rule.token.
@@ -164,9 +171,16 @@ def _matching_rule(phonemes: str, i: int, language: Language, table: Table) -> R
     return None
 
 
+def piper_input(espeak_phonemes: str) -> str:
+    """What piper-rs maps to IDs: the `espeak_phonemize` string, trimmed, NFD."""
+    return unicodedata.normalize("NFD", espeak_phonemes.strip())
+
+
 def _is_clause_punctuation(phonemes: str, i: int, rule: Rule | None, table: Table) -> bool:
     if phonemes[i] not in table.clause_punctuation:
         return False
+    if i + 1 == len(phonemes):
+        return True
     if phonemes[i + 1:i + 2] != " ":
         return False
     if i + 2 == len(phonemes) or phonemes[i + 2] == " ":

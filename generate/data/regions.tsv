@@ -1,0 +1,11 @@
+# Voice locale -> language ID (accent region). Voices whose locale is not listed use their espeak voice.
+locale	language
+es_ES	es
+es_MX	es-419
+es_AR	es-AR
+nl_BE	nl-BE
+nl_NL	nl-NL
+en_US	en-us
+en_GB	en-gb
+pt_PT	pt
+pt_BR	pt-br

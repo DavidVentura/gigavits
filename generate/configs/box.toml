@@ -1,0 +1,95 @@
+# Full generation on a many-core box. Paths assume the repo at /workspace/gigapiper, the app bucket mirrored
+# to /workspace/bucket by `fetch`, piper-rs at /workspace/piper-rs, Kokoro in /workspace/kokoro.
+
+[paths]
+root = "../.."
+tiers = "voices/tiers.csv"
+voice_list = "voices/voice_list.tsv"
+kokoro_list = "voices/kokoro_list.tsv"
+other_list = "voices/other_list.tsv"
+espeak_data = "coverage/work/espeak-ng-data"
+teacher_rt = "/workspace/piper-rs/target/release/teacher-rt"
+kokoro_source_onnx = "/workspace/kokoro/kokoro-v1.0.onnx"
+kokoro_onnx = "/workspace/kokoro/kokoro-v1.0.patched.i32.onnx"
+kokoro_voices = "/workspace/bucket/tts/1/kokoro/voices-v1.0.bin"
+regions = "generate/data/regions.tsv"
+flores_codes = "generate/data/flores_codes.tsv"
+source_catalog = "generate/data/source_catalog.json"
+mnn_catalog = "generate/data/mnn_catalog.json"
+extra_sources = "generate/data/extra_sources.tsv"
+sentences = "generate/sentences"
+bucket_in_lists = "/home/david/AndroidStudioProjects/bucket"
+bucket = "/workspace/bucket"
+out = "/workspace/teacher-data"
+
+[sentences]
+train = 2000
+held_out = 50
+core = 300
+min_words = 4
+max_words = 25
+max_words_by_espeak = { vi = 45 }
+
+[[sentences.source]]
+kind = "tsv"
+path = "coverage/work/sentences.tsv"
+
+[[sentences.source]]
+kind = "flores"
+path = "coverage/work/flores200_dataset"
+
+[selection]
+voices = []  # every speaker in tiers.csv
+exclude_voices = [
+    # Italian test references are never trained in run 1 (PLAN Speakers)
+    "it_IT-paola-medium", "kokoro-if_sara",
+    # PLAN rule 2, at most 8 degraded Piper speakers, one per language: pt-br keeps jeff (22 kHz)
+    "pt_BR-edresson-low",
+]
+exclude_speakers = [
+    # PLAN rule 2: fr keeps one degraded mls speaker (13142)
+    "fr_FR-mls-medium.7679",
+]
+# Mandarin is out of run 1.
+exclude_espeak = ["cmn"]
+
+[hours]
+lineup = 4.0
+lineup_speakers = []
+
+
+# Multi-speaker samples (PLAN Speakers): 10-15 min per speaker.
+[hours.voice]
+"fr_FR-mls-medium" = 0.2
+"es_ES-sharvard-medium" = 0.2
+"sr_RS-serbski_institut-medium" = 0.2
+
+[hours.tier]
+good = 1.5
+clean_robot = 0.75
+natural_degraded = 0.75
+
+[render]
+noise = "voice_config"
+rate = "raise_slow"
+second_render_fraction = 0.2
+part_hours = 0.5
+seed = 1
+
+[quality]
+duration_z = 4.0
+min_symbol_count = 30
+silence_db = -45.0
+silence_frame_s = 0.02
+max_internal_silence_s = 1.0
+flag_drop_fraction = 0.10
+
+[fetch]
+kokoro_url = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx"
+
+[package]
+shard_bytes = 1_000_000_000
+
+[run]
+workers = 32
+threads_per_worker = 1

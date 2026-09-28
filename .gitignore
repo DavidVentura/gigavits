@@ -26,3 +26,11 @@ runs/
 eval/models/
 *.ckpt
 eval/venv/
+generate/out/
+generate/.venv/
+# Copies of the Translator app's catalog_sources/source_catalog.json and app/src/main/assets/index_v6.json;
+# calibration/pipeline/upload.sh sends them to the box.
+generate/data/source_catalog.json
+generate/data/mnn_catalog.json
+# `python -m gigagen <config> select` output, rebuilt from coverage/work; upload.sh sends them to the box.
+generate/sentences/

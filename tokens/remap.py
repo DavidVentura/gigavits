@@ -2,7 +2,8 @@
 
 Every old espeak voice map is a prefix of the shared table (a map with n symbols holds exactly ids
 0..n-1 with the shared ids), and piper-rs feeds a voice one token per character it knows while
-silently skipping characters its map lacks. So for one espeak string:
+silently skipping characters its map lacks. Both sides read the same string, the trimmed one piper-rs
+feeds (`tokenizer.piper_input`). So for one espeak string:
 
 - nothing skipped: teacher and student sequences have the same length and position k of one
   corresponds to position k of the other; only the ids of context-dependent characters differ
@@ -22,7 +23,7 @@ from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 
-from tokenizer import Language, Table, UnsupportedLanguage, tokenize
+from tokenizer import Language, Table, UnsupportedLanguage, piper_input, tokenize
 
 PAD, BOS, EOS = "_", "^", "$"
 
@@ -55,7 +56,8 @@ class Remapped:
 
 
 def teacher_input(phonemes: str, phoneme_id_map: dict[str, list[int]]) -> TeacherInput:
-    """Replicates piper-rs `phonemes_to_ids`, reporting what its tokenizer skips."""
+    """Replicates piper-rs `phonemes_to_ids` on the string it is given (the trimmed one piper-rs
+    feeds; see `piper_input`), reporting what its tokenizer skips."""
     words = phonemes.split()
     whitespace_split = bool(words) and all(w in phoneme_id_map for w in words)
     if whitespace_split:
@@ -85,8 +87,10 @@ def teacher_input(phonemes: str, phoneme_id_map: dict[str, list[int]]) -> Teache
 
 
 def remap(phonemes: str, language: Language, phoneme_id_map: dict[str, list[int]], table: Table) -> Remapped:
-    teacher = teacher_input(phonemes, phoneme_id_map)
-    student = tuple(tokenize(phonemes, language, table))
+    """`phonemes` is the `espeak_phonemize` string; both sides read it as piper-rs feeds it."""
+    fed = piper_input(phonemes)
+    teacher = teacher_input(fed, phoneme_id_map)
+    student = tuple(tokenize(fed, language, table))
     result = Remapped(teacher, student)
     if result.aligned:
         assert len(teacher.ids) == len(student), (phonemes, teacher.ids, student)
