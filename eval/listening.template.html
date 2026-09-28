@@ -1,0 +1,198 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Listening test</title>
+<style>
+  body { font: 16px system-ui, sans-serif; margin: 2em auto; max-width: 60em; }
+  .choices { display: flex; flex-wrap: wrap; gap: 10px; margin: 1.5em 0; }
+  .c { min-width: 6em; padding: 14px 10px; text-align: center; border: 2px solid #ccc; border-radius: 8px; cursor: pointer; font-size: 20px; }
+  .c.current { border-color: #e0a800; box-shadow: 0 0 0 3px #ffe38a; }
+  .c.chosen { background: #d8f5d0; }
+  .help { color: #555; font-size: 14px; }
+  .text { font-size: 18px; margin: 1em 0; }
+  h2 { margin: 0.3em 0; }
+  textarea { width: 100%; font: inherit; }
+  #ab, #rating { display: none; }
+</style>
+<p>
+  Listener <input id="listener" placeholder="your name">
+  Test <select id="test"><option value="ab">blind A/B</option><option value="rating">how native does it sound</option></select>
+  <select id="group"></select>
+</p>
+
+<div id="ab">
+  <div class="help">
+    <b>1</b>/<b>2</b> play A / B · <b>a</b> A better · <b>b</b> B better · <b>t</b> can't tell (all move on) ·
+    <b>z</b>/<b>x</b> previous / next sentence
+  </div>
+  <h2>sentence <span id="ab-where"></span></h2>
+  <p class="text" id="ab-text"></p>
+  <div class="choices">
+    <div class="c" id="play-a">play A</div>
+    <div class="c" id="play-b">play B</div>
+  </div>
+  <div class="choices" id="ab-choices">
+    <div class="c" data-answer="A">A better</div>
+    <div class="c" data-answer="tie">can't tell</div>
+    <div class="c" data-answer="B">B better</div>
+  </div>
+</div>
+
+<div id="rating">
+  <div class="help">
+    <b>space</b> replay · <b>1</b>–<b>5</b> rate (1 = clearly foreign, 5 = native) · notes are saved as you type ·
+    <b>Enter</b> in the notes or the button moves on
+  </div>
+  <h2>clip <span id="rating-where"></span></h2>
+  <p class="text" id="rating-text"></p>
+  <div class="choices" id="rating-choices"></div>
+  <p>Any sound clearly wrong? <textarea id="note" rows="2"></textarea></p>
+  <p><button id="rating-next">next</button> <button id="rating-prev">previous</button></p>
+</div>
+
+<p id="progress"></p>
+<p><button id="export-ab">export ab.csv</button> <button id="export-rating">export ratings.csv</button></p>
+<audio id="player"></audio>
+<script>
+const DATA = /*DATA*/{};
+const STORE = "listening-v1";
+const answers = JSON.parse(localStorage.getItem(STORE) || "{}");
+const save = () => localStorage.setItem(STORE, JSON.stringify(answers));
+const player = document.getElementById("player");
+const listenerInput = document.getElementById("listener");
+const testSelect = document.getElementById("test");
+const groupSelect = document.getElementById("group");
+listenerInput.value = localStorage.getItem(STORE + "-listener") || "";
+let pos = 0;
+
+const listener = () => listenerInput.value.trim();
+const mine = () => (answers[listener()] ||= { ab: {}, rating: {} });
+const groups = () => testSelect.value === "ab" ? DATA.ab : DATA.rating;
+const group = () => groups()[groupSelect.selectedIndex];
+const items = () => group().items;
+const item = () => items()[pos];
+const src = (path) => path.split("/").map(encodeURIComponent).join("/");
+
+function play(path) { player.src = src(path); player.play(); }
+
+function fillGroups() {
+  groupSelect.innerHTML = "";
+  for (const g of groups()) groupSelect.add(new Option(g.label, g.label));
+  pos = 0;
+}
+
+function render() {
+  const ab = testSelect.value === "ab";
+  document.getElementById("ab").style.display = ab ? "block" : "none";
+  document.getElementById("rating").style.display = ab ? "none" : "block";
+  if (!groups().length) { document.getElementById("progress").textContent = "no items for this test"; return; }
+  const it = item();
+  const store = mine()[testSelect.value];
+  const done = items().filter((x) => x.id in store).length;
+  document.getElementById("progress").textContent =
+    (listener() ? "" : "enter your name first · ") + `${group().label}: ${done}/${items().length} answered`;
+  if (ab) {
+    document.getElementById("ab-where").textContent = `${pos + 1}/${items().length}`;
+    document.getElementById("ab-text").textContent = it.text;
+    for (const el of document.querySelectorAll("#ab-choices .c"))
+      el.className = "c" + (store[it.id] === el.dataset.answer ? " chosen" : "");
+  } else {
+    document.getElementById("rating-where").textContent = `${pos + 1}/${items().length}`;
+    document.getElementById("rating-text").textContent = it.text;
+    const box = document.getElementById("rating-choices");
+    box.innerHTML = "";
+    for (let s = 1; s <= 5; s++) {
+      const el = document.createElement("div");
+      el.className = "c" + (store[it.id]?.score === s ? " chosen" : "");
+      el.textContent = s;
+      el.onclick = () => rate(s);
+      box.appendChild(el);
+    }
+    document.getElementById("note").value = store[it.id]?.note || "";
+  }
+}
+
+function goto(i) {
+  pos = (i + items().length) % items().length;
+  render();
+  if (testSelect.value === "rating") play(item().audio);
+}
+
+function nextUnanswered() {
+  const store = mine()[testSelect.value];
+  const after = items().findIndex((x, i) => i > pos && !(x.id in store));
+  const any = items().findIndex((x) => !(x.id in store));
+  if (after >= 0) return goto(after);
+  if (any >= 0) return goto(any);
+  render();
+  document.getElementById("progress").textContent += " · all done, export below";
+}
+
+function answerAb(answer) {
+  if (!listener()) return render();
+  mine().ab[item().id] = answer; save(); nextUnanswered();
+}
+
+function rate(score) {
+  if (!listener()) return render();
+  const note = document.getElementById("note").value;
+  mine().rating[item().id] = { score, note }; save(); render();
+}
+
+function saveNote() {
+  const entry = mine().rating[item().id];
+  if (entry) { entry.note = document.getElementById("note").value; save(); }
+}
+
+const csvCell = (x) => `"${String(x).replaceAll('"', '""')}"`;
+function download(name, header, rows) {
+  const lines = [header.join(",")].concat(rows.map((r) => r.map(csvCell).join(",")));
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
+  a.download = name; a.click();
+}
+
+document.getElementById("export-ab").onclick = () => {
+  const rows = [];
+  for (const [who, mineAll] of Object.entries(answers)) for (const g of DATA.ab) for (const it of g.items)
+    if (it.id in mineAll.ab) rows.push([who, g.voice, g.speaker, g.language, it.item, it.original_side, mineAll.ab[it.id]]);
+  download("ab.csv", ["listener", "voice", "speaker", "language", "item", "original_side", "answer"], rows);
+};
+document.getElementById("export-rating").onclick = () => {
+  const rows = [];
+  for (const [who, mineAll] of Object.entries(answers)) for (const g of DATA.rating) for (const it of g.items) {
+    const a = mineAll.rating[it.id];
+    if (a) rows.push([who, g.language, it.voice, it.speaker, it.item, a.score, a.note]);
+  }
+  download("ratings.csv", ["listener", "language", "voice", "speaker", "item", "score", "note"], rows);
+};
+
+document.getElementById("play-a").onclick = () => play(item().a);
+document.getElementById("play-b").onclick = () => play(item().b);
+for (const el of document.querySelectorAll("#ab-choices .c")) el.onclick = () => answerAb(el.dataset.answer);
+document.getElementById("rating-next").onclick = () => { saveNote(); nextUnanswered(); };
+document.getElementById("rating-prev").onclick = () => { saveNote(); goto(pos - 1); };
+document.getElementById("note").addEventListener("input", saveNote);
+document.getElementById("note").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { e.preventDefault(); saveNote(); nextUnanswered(); }
+});
+listenerInput.onchange = () => { localStorage.setItem(STORE + "-listener", listener()); listenerInput.blur(); render(); };
+testSelect.onchange = () => { testSelect.blur(); fillGroups(); render(); };
+groupSelect.onchange = () => { groupSelect.blur(); pos = 0; render(); };
+document.addEventListener("keydown", (e) => {
+  if (["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName) || !groups().length) return;
+  if (testSelect.value === "ab") {
+    if (e.key === "1") play(item().a);
+    else if (e.key === "2") play(item().b);
+    else if (e.key === "a") answerAb("A");
+    else if (e.key === "b") answerAb("B");
+    else if (e.key === "t") answerAb("tie");
+  } else {
+    if (e.key >= "1" && e.key <= "5") rate(Number(e.key));
+    else if (e.key === " ") { e.preventDefault(); play(item().audio); }
+  }
+  if (e.key === "x") goto(pos + 1);
+  else if (e.key === "z") goto(pos - 1);
+});
+fillGroups();
+render();
+</script>

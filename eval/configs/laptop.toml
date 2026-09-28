@@ -1,0 +1,33 @@
+# Laptop: everything except Whisper; the phoneme recognizer is an untrained stand-in with the real
+# vocabulary (exercises the code path, its numbers mean nothing). Speaker references are the
+# samples' 3 clips per voice, so reference_utterances is 3 here.
+threads = 8
+
+[phonemizer]
+binary = "/home/david/git/piper-rs/target/release/phoneme-coverage"
+espeak_data = "../../coverage/work/espeak-ng-data"
+reference_config = "/home/david/AndroidStudioProjects/bucket/tts/1/en/en_US/amy/medium/en_US-amy-medium.onnx.json"
+reference_model = "/home/david/AndroidStudioProjects/bucket/tts/1/en/en_US/amy/medium/en_US-amy-medium.mnn"
+
+[metrics.per]
+model = { random_init = "../models/wav2vec2-lv-60-espeak-cv-ft-meta" }
+device = "cpu"
+
+[metrics.lid]
+model = { path = "../models/lang-id-voxlingua107-ecapa" }
+device = "cpu"
+savedir = "../models/speechbrain/lang-id-voxlingua107-ecapa"
+
+[metrics.speaker]
+model = { path = "../models/spkrec-ecapa-voxceleb" }
+device = "cpu"
+savedir = "../models/speechbrain/spkrec-ecapa-voxceleb"
+reference_utterances = 3
+
+[metrics.f0]
+fmin_hz = 50
+fmax_hz = 600
+max_length_mismatch_s = 0.02
+min_voiced_frames = 20
+
+[metrics.quality]

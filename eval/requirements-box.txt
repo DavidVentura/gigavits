@@ -1,0 +1,12 @@
+# GPU box: CUDA torch from the default index; same versions as the laptop otherwise.
+torch==2.13.0
+torchaudio==2.11.0
+numpy==2.5.3
+scipy==1.18.1
+librosa==1.0.0
+soundfile==0.14.0
+onnxruntime==1.30.0
+transformers==5.16.1
+speechbrain==1.1.1
+faster-whisper
+pytest

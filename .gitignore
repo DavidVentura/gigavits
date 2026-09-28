@@ -25,3 +25,4 @@ quality/models/*.onnx
 runs/
 eval/models/
 *.ckpt
+eval/venv/
