@@ -22,3 +22,6 @@ quality/models/*.onnx
 # Listening verdicts are hand-made input, not generated output.
 !voices/verdicts.csv
 !voices/verdict_overrides.csv
+runs/
+eval/models/
+*.ckpt
