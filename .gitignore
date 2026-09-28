@@ -1,0 +1,24 @@
+*.md
+*.wav
+*.pyc
+*.csv
+*.onnx
+*.mnn
+**/__pycache__
+coverage/work/*
+quality/venv/*
+quality/models/torch/*
+candidates/venv-indic/*
+candidates/work/*
+relisten/
+candidates/venv*/
+candidates/models/
+candidates/*.json
+voices/samples/
+voices/candidates/
+voices/*.html
+!voices/*.template.html
+quality/models/*.onnx
+# Listening verdicts are hand-made input, not generated output.
+!voices/verdicts.csv
+!voices/verdict_overrides.csv

@@ -1,0 +1,148 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Voice pass/fail</title>
+<style>
+  body { font: 16px system-ui, sans-serif; margin: 2em auto; max-width: 60em; }
+  .voices { display: flex; flex-wrap: wrap; gap: 10px; margin: 1.5em 0; }
+  .v { min-width: 4.5em; padding: 14px 10px; text-align: center; border: 2px solid #ccc; border-radius: 8px; cursor: pointer; font-size: 20px; }
+  .v.current { border-color: #e0a800; box-shadow: 0 0 0 3px #ffe38a; }
+  .v.pass { background: #d8f5d0; }
+  .v.fail { background: #f8d0d0; }
+  .help { color: #555; font-size: 14px; }
+  h2 { margin: 0.3em 0; }
+  table { border-collapse: collapse; font-size: 13px; }
+  td, th { padding: 2px 8px; border-bottom: 1px solid #eee; text-align: left; }
+  #results { display: none; margin-top: 1em; }
+</style>
+<p>Category <select id="cat"></select> <b id="question"></b></p>
+<div class="help">
+  <b>y</b> pass · <b>n</b> fail (both move on) · <b>z</b>/<b>x</b> previous / next voice · <b>space</b> replay ·
+  next language starts when every voice here is marked · click a voice to jump to it
+</div>
+<h2>language <span id="lang"></span> <small id="where"></small></h2>
+<div class="voices" id="voices"></div>
+<p id="progress"></p>
+<p>
+  <button id="toggle">show results (reveals names)</button>
+  <button id="export">export verdicts.csv</button>
+</p>
+<div id="results"></div>
+<audio id="player"></audio>
+<script>
+const DATA = /*DATA*/{};
+const CLIP_S = 6;
+const STORE = "voice-verdicts-v1";
+const verdicts = JSON.parse(localStorage.getItem(STORE) || "{}");
+const save = () => localStorage.setItem(STORE, JSON.stringify(verdicts));
+const player = document.getElementById("player");
+const catSelect = document.getElementById("cat");
+for (const c of DATA.categories) catSelect.add(new Option(c.name, c.name));
+
+let langIdx = 0, voiceIdx = 0, started = false;
+const cat = () => catSelect.value;
+const lang = () => DATA.languages[langIdx];
+const vkey = (voice) => `${cat()}|${voice.key}`;
+const complete = (l) => l.voices.every((v) => vkey(v) in verdicts);
+
+function firstIncomplete() {
+  const i = DATA.languages.findIndex((l) => !complete(l));
+  return i;
+}
+
+function play() {
+  const v = lang().voices[voiceIdx];
+  player.src = v.path.split("/").map(encodeURIComponent).join("/");
+  player.ontimeupdate = () => { if (player.currentTime >= CLIP_S) player.pause(); };
+  player.play();
+}
+
+function render() {
+  const c = DATA.categories.find((x) => x.name === cat());
+  document.getElementById("question").textContent = c.question;
+  document.getElementById("lang").textContent = lang().lang;
+  document.getElementById("where").textContent = `(${langIdx + 1}/${DATA.languages.length}, ${lang().voices.length} voices)`;
+  const box = document.getElementById("voices");
+  box.innerHTML = "";
+  lang().voices.forEach((v, i) => {
+    const div = document.createElement("div");
+    const verdict = verdicts[vkey(v)];
+    div.className = "v" + (i === voiceIdx ? " current" : "") + (verdict ? " " + verdict : "");
+    div.textContent = "v" + (i + 1);
+    div.onclick = () => { voiceIdx = i; render(); play(); };
+    box.appendChild(div);
+  });
+  const total = DATA.languages.reduce((a, l) => a + l.voices.length, 0);
+  const done = DATA.languages.reduce((a, l) => a + l.voices.filter((v) => vkey(v) in verdicts).length, 0);
+  document.getElementById("progress").textContent = `${cat()}: ${done}/${total} voices marked`;
+  if (resultsOpen) renderResults();
+}
+
+function goto(li, vi) {
+  langIdx = li; voiceIdx = vi; render(); if (started) play();
+}
+
+function advance() {
+  const l = lang();
+  const nextUnmarked = l.voices.findIndex((v, i) => i > voiceIdx && !(vkey(v) in verdicts));
+  const anyUnmarked = l.voices.findIndex((v) => !(vkey(v) in verdicts));
+  if (nextUnmarked >= 0) return goto(langIdx, nextUnmarked);
+  if (anyUnmarked >= 0) return goto(langIdx, anyUnmarked);
+  const li = firstIncomplete();
+  if (li >= 0) return goto(li, 0);
+  const ci = DATA.categories.findIndex((c) => c.name === cat());
+  if (ci + 1 < DATA.categories.length) {
+    catSelect.value = DATA.categories[ci + 1].name;
+    const next = firstIncomplete();
+    return goto(Math.max(0, next), 0);
+  }
+  player.pause(); render();
+  document.getElementById("progress").textContent += " · all categories done";
+}
+
+function mark(value) {
+  verdicts[vkey(lang().voices[voiceIdx])] = value;
+  save(); advance();
+}
+
+let resultsOpen = false;
+function renderResults() {
+  const rows = [];
+  for (const l of DATA.languages) for (const v of l.voices) {
+    const cells = DATA.categories.map((c) => verdicts[`${c.name}|${v.key}`] || "");
+    rows.push(`<tr><td>${l.lang}</td><td>${v.key}</td>${cells.map((x) => `<td>${x}</td>`).join("")}</tr>`);
+  }
+  document.getElementById("results").innerHTML =
+    `<table><tr><th>lang</th><th>voice|speaker</th>${DATA.categories.map((c) => `<th>${c.name}</th>`).join("")}</tr>${rows.join("")}</table>`;
+}
+
+document.getElementById("toggle").onclick = () => {
+  resultsOpen = !resultsOpen;
+  document.getElementById("results").style.display = resultsOpen ? "block" : "none";
+  render();
+};
+document.getElementById("export").onclick = () => {
+  const header = ["lang", "voice", "speaker"].concat(DATA.categories.map((c) => c.name));
+  const lines = [header.join(",")];
+  for (const l of DATA.languages) for (const v of l.voices) {
+    const [voice, speaker] = v.key.split("|");
+    lines.push([l.lang, voice, speaker].concat(DATA.categories.map((c) => verdicts[`${c.name}|${v.key}`] || "")).map((x) => `"${x}"`).join(","));
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
+  a.download = "verdicts.csv"; a.click();
+};
+catSelect.onchange = () => { catSelect.blur(); const li = firstIncomplete(); goto(Math.max(0, li), 0); };
+document.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "SELECT") return;
+  if (!started) { started = true; }
+  const n = lang().voices.length;
+  if (e.key === "y") mark("pass");
+  else if (e.key === "n") mark("fail");
+  else if (e.key === "x") goto(langIdx, (voiceIdx + 1) % n);
+  else if (e.key === "z") goto(langIdx, (voiceIdx - 1 + n) % n);
+  else if (e.key === " ") { e.preventDefault(); play(); }
+});
+document.body.addEventListener("click", () => { if (!started) { started = true; play(); } }, { once: true });
+goto(Math.max(0, firstIncomplete()), 0);
+document.getElementById("progress").textContent += " · click anywhere (or press space) to start";
+</script>

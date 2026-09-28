@@ -1,0 +1,141 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Voice tiers</title>
+<style>
+  body { font: 14px system-ui, sans-serif; margin: 1em; }
+  table { border-collapse: collapse; width: 100%; }
+  td, th { padding: 3px 6px; border-bottom: 1px solid #ddd; text-align: left; white-space: nowrap; }
+  tr.current { background: #fff3c4; }
+  .opt { cursor: pointer; padding: 1px 5px; border: 1px solid #bbb; border-radius: 3px; margin-right: 2px; color: #888; }
+  .opt.on { background: #333; color: #fff; border-color: #333; }
+  .metrics { color: #666; font-size: 12px; }
+  body.hide-metrics .metrics { display: none; }
+  input.note { width: 22em; }
+  .help { background: #f4f4f4; padding: 6px 10px; margin-bottom: 8px; }
+</style>
+<div class="help">
+  Pass <select id="axis"></select> ·
+  <b>Keys:</b> j/↓ next speaker (plays) · k/↑ previous · space replay · n next sample ·
+  <b>1 2 3</b> the pass's options, left to right ·
+  <b>l</b> lineup candidate · <b>e</b> edit note (Enter to leave)
+  <br>
+  Language <select id="lang"><option value="">all</option></select>
+  <label><input type="checkbox" id="showMetrics"> show automatic metrics</label>
+  <button id="export">export ratings.csv</button>
+  <span id="progress"></span>
+</div>
+<table><thead><tr>
+  <th>voice</th><th>spk</th><th>lang</th><th id="axisHead">rating</th><th>★</th><th>note</th>
+  <th class="metrics">bw kHz</th><th class="metrics">snr</th><th class="metrics">harm</th>
+  <th class="metrics">f0 Hz</th><th class="metrics">f0 range st</th><th class="metrics">ph/s</th><th class="metrics">flags</th>
+</tr></thead><tbody id="rows"></tbody></table>
+<audio id="player"></audio>
+<script>
+const ITEMS = /*ITEMS*/[];
+const SEEDS = /*SEEDS*/{};
+const AXES = {
+  audio: ["clean", "ok", "bad"],
+  timbre: ["natural", "robotic"],
+  prosody: ["natural", "flat", "odd"],
+  tempo: ["slow", "ok", "fast"],
+};
+const axisSelect = document.getElementById("axis");
+for (const axis of Object.keys(AXES)) axisSelect.add(new Option(axis, axis));
+const keyFor = (k) => { const v = AXES[axisSelect.value][Number(k) - 1]; return v ? [axisSelect.value, v] : null; };
+const STORE = "voice-tiers-v1";
+const ratings = JSON.parse(localStorage.getItem(STORE) || "{}");
+for (const [key, seed] of Object.entries(SEEDS)) if (!ratings[key]) ratings[key] = seed;
+const save = () => localStorage.setItem(STORE, JSON.stringify(ratings));
+save();
+
+const keyOf = (it) => `${it.voice}|${it.speaker}`;
+const rating = (it) => (ratings[keyOf(it)] ||= { audio: "", timbre: "", prosody: "", tempo: "", lineup: false, note: "" });
+const player = document.getElementById("player");
+const tbody = document.getElementById("rows");
+let visible = ITEMS, current = 0, sample = 0;
+
+const langs = [...new Set(ITEMS.map((it) => it.espeak))].sort();
+for (const l of langs) document.getElementById("lang").add(new Option(l, l));
+
+function render() {
+  const filter = document.getElementById("lang").value;
+  visible = ITEMS.filter((it) => !filter || it.espeak === filter);
+  tbody.innerHTML = "";
+  visible.forEach((it, i) => {
+    const r = rating(it);
+    const tr = tbody.insertRow();
+    tr.className = i === current ? "current" : "";
+    tr.onclick = () => select(i);
+    const cell = (html, cls) => { const td = tr.insertCell(); td.innerHTML = html; if (cls) td.className = cls; return td; };
+    cell(it.voice); cell(it.speaker); cell(it.espeak);
+    for (const [axis, values] of Object.entries(AXES)) {
+      const td = cell("");
+      if (axis !== axisSelect.value) td.style.display = "none";
+      for (const v of values) {
+        const span = document.createElement("span");
+        span.className = "opt" + (r[axis] === v ? " on" : "");
+        span.textContent = v;
+        span.onclick = (e) => { e.stopPropagation(); set(it, axis, v); };
+        td.appendChild(span);
+      }
+    }
+    cell(r.lineup ? "★" : "");
+    const note = document.createElement("input");
+    note.className = "note"; note.value = r.note || "";
+    note.onchange = () => { r.note = note.value; save(); };
+    note.onkeydown = (e) => { if (e.key === "Enter") note.blur(); e.stopPropagation(); };
+    cell("").appendChild(note);
+    for (const k of ["bandwidth_khz", "snr_db", "harmonicity", "f0_median_hz", "f0_range_st", "phonemes_per_s", "flags"]) cell(it[k], "metrics");
+  });
+  const done = ITEMS.filter((it) => rating(it).audio).length;
+  document.getElementById("progress").textContent = `${done}/${ITEMS.length} rated`;
+}
+
+function set(it, axis, value) {
+  const r = rating(it);
+  r[axis] = r[axis] === value ? "" : value;
+  save(); render();
+}
+
+function play() {
+  const it = visible[current];
+  if (!it) return;
+  player.src = "samples/" + encodeURIComponent(it.files[sample % it.files.length]);
+  player.play();
+}
+
+function select(i) {
+  current = Math.max(0, Math.min(visible.length - 1, i));
+  sample = 0; render(); play();
+  tbody.rows[current]?.scrollIntoView({ block: "center" });
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+  const it = visible[current];
+  if (e.key === "j" || e.key === "ArrowDown") { e.preventDefault(); select(current + 1); }
+  else if (e.key === "k" || e.key === "ArrowUp") { e.preventDefault(); select(current - 1); }
+  else if (e.key === " ") { e.preventDefault(); play(); }
+  else if (e.key === "n") { sample += 1; play(); }
+  else if (e.key === "l" && it) { rating(it).lineup = !rating(it).lineup; save(); render(); }
+  else if (e.key === "e") { e.preventDefault(); tbody.rows[current]?.querySelector("input.note")?.focus(); }
+  else if (keyFor(e.key) && it) set(it, ...keyFor(e.key));
+});
+
+axisSelect.onchange = () => { render(); axisSelect.blur(); };
+document.getElementById("lang").onchange = () => { current = 0; render(); };
+document.getElementById("showMetrics").onchange = (e) => document.body.classList.toggle("hide-metrics", !e.target.checked);
+document.body.classList.add("hide-metrics");
+document.getElementById("export").onclick = () => {
+  const header = ["voice", "speaker", "espeak", "audio", "timbre", "prosody", "tempo", "lineup", "note"];
+  const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const lines = [header.join(",")].concat(ITEMS.map((it) => {
+    const r = rating(it);
+    return [it.voice, it.speaker, it.espeak, r.audio, r.timbre, r.prosody, r.tempo, r.lineup ? 1 : 0, r.note].map(esc).join(",");
+  }));
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
+  a.download = "ratings.csv"; a.click();
+};
+render();
+</script>

@@ -1,0 +1,7 @@
+[package]
+name = "gen-bench"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+piper-rs = { path = "../../piper-rs", default-features = false }

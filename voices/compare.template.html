@@ -1,0 +1,174 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Voice comparisons</title>
+<style>
+  body { font: 16px system-ui, sans-serif; margin: 2em auto; max-width: 52em; }
+  .pair { display: flex; gap: 2em; margin: 1.5em 0; }
+  .side { flex: 1; border: 2px solid #ccc; border-radius: 8px; padding: 1em; text-align: center; font-size: 28px; }
+  .side.playing { border-color: #e0a800; background: #fff8e0; }
+  .help { color: #555; font-size: 14px; }
+  table { border-collapse: collapse; font-size: 13px; margin-top: 1em; }
+  td, th { padding: 2px 8px; border-bottom: 1px solid #eee; text-align: left; }
+  #results { display: none; }
+</style>
+<p>Pass <select id="pass"></select> <b id="question"></b></p>
+<div class="help">
+  Plays A then B (same sentence, first 6 s). <b>1</b> A · <b>2</b> can't tell · <b>3</b> B ·
+  <b>r</b> replay both · <b>a</b>/<b>b</b> replay one side · <b>u</b> undo last answer.
+  Names stay hidden until you open the results.
+</div>
+<p><span id="progress"></span> · <span id="kind"></span> · language <b id="lang"></b></p>
+<div class="pair"><div class="side" id="A">A</div><div class="side" id="B">B</div></div>
+<p>
+  <button id="toggle">show results (reveals names)</button>
+  <button id="export">export pairs.csv</button>
+</p>
+<div id="results"></div>
+<audio id="player"></audio>
+<script>
+const PASSES = /*PASSES*/{};
+const CLIP_S = 6;
+const STORE = "voice-pairs-v3";
+const allAnswers = JSON.parse(localStorage.getItem(STORE) || "{}");
+const save = () => localStorage.setItem(STORE, JSON.stringify(allAnswers));
+const passSelect = document.getElementById("pass");
+for (const name of Object.keys(PASSES)) passSelect.add(new Option(name, name));
+let PAIRS, answers, history = [];
+function usePass(name) {
+  PAIRS = PASSES[name].pairs;
+  answers = (allAnswers[name] ||= {});
+  document.getElementById("question").textContent = PASSES[name].question;
+  history = [];
+}
+const player = document.getElementById("player");
+let current = null;
+let playToken = 0;
+
+const pairKey = (p) => `${p.a} vs ${p.b}`;
+const next = () => PAIRS.find((p) => !(pairKey(p) in answers));
+
+function playSide(side, then) {
+  const token = ++playToken;
+  const file = side === "A" ? current.fa : current.fb;
+  document.getElementById("A").classList.toggle("playing", side === "A");
+  document.getElementById("B").classList.toggle("playing", side === "B");
+  player.src = "samples/" + encodeURIComponent(file);
+  player.ontimeupdate = () => { if (player.currentTime >= CLIP_S) player.pause(), finish(); };
+  player.onended = () => finish();
+  let done = false;
+  function finish() {
+    if (done || token !== playToken) return;
+    done = true;
+    document.getElementById(side).classList.remove("playing");
+    if (then) setTimeout(then, 300);
+  }
+  player.play();
+}
+
+function show() {
+  current = next();
+  const answered = Object.keys(answers).length;
+  document.getElementById("progress").textContent = `${answered}/${PAIRS.length} answered`;
+  if (!current) { document.getElementById("kind").textContent = "all done"; return; }
+  document.getElementById("kind").textContent = current.kind;
+  document.getElementById("lang").textContent = current.lang;
+  playSide("A", () => playSide("B"));
+}
+
+function answer(value) {
+  if (!current) return;
+  answers[pairKey(current)] = value;
+  history.push(pairKey(current));
+  save(); ++playToken; player.pause(); show(); if (resultsOpen) renderResults();
+}
+
+// Bradley–Terry strengths per language from the non-tie answers ("can't tell" counts half each way).
+function ranking() {
+  const wins = {}, games = {}, lang = {};
+  for (const p of PAIRS) {
+    const v = answers[pairKey(p)];
+    if (v === undefined) continue;
+    for (const k of [p.a, p.b]) { wins[k] ??= 0; games[k] ??= {}; lang[k] ??= p.lang; }
+    const scoreA = v === "A" ? 1 : v === "B" ? 0 : 0.5;
+    wins[p.a] += scoreA; wins[p.b] += 1 - scoreA;
+    games[p.a][p.b] = (games[p.a][p.b] || 0) + 1;
+    games[p.b][p.a] = (games[p.b][p.a] || 0) + 1;
+  }
+  const keys = Object.keys(wins);
+  let s = Object.fromEntries(keys.map((k) => [k, 1]));
+  for (let it = 0; it < 200; it++) {
+    const ns = {};
+    for (const i of keys) {
+      let denom = 0;
+      for (const [j, n] of Object.entries(games[i])) denom += n / (s[i] + s[j]);
+      ns[i] = (wins[i] + 0.1) / (denom + 0.2 / s[i]);
+    }
+    const mean = keys.reduce((a, k) => a + Math.log(ns[k]), 0) / keys.length;
+    s = Object.fromEntries(keys.map((k) => [k, ns[k] / Math.exp(mean)]));
+  }
+  return keys.map((k) => ({ key: k, strength: Math.log(s[k]), played: Object.values(games[k]).reduce((a, b) => a + b, 0) }));
+}
+
+function consistency() {
+  const byPair = {};
+  for (const p of PAIRS) {
+    const v = answers[pairKey(p)];
+    if (v === undefined) continue;
+    const id = [p.a, p.b].sort().join(" vs ");
+    const winner = v === "tie" ? "tie" : v === "A" ? p.a : p.b;
+    (byPair[id] ||= []).push(winner);
+  }
+  const repeated = Object.values(byPair).filter((w) => w.length > 1);
+  const agree = repeated.filter((w) => w.every((x) => x === w[0])).length;
+  return `${agree}/${repeated.length} repeated pairs answered the same way`;
+}
+
+function metricAgreement() {
+  const judged = PAIRS.filter((p) => p.expect && pairKey(p) in answers);
+  if (!judged.length) return "";
+  const clear = judged.filter((p) => p.expect !== "close");
+  const agree = clear.filter((p) => answers[pairKey(p)] === p.expect).length;
+  const close = judged.filter((p) => p.expect === "close");
+  const heardTie = close.filter((p) => answers[pairKey(p)] === "tie").length;
+  return `rate metric: agreed on ${agree}/${clear.length} pairs it calls different; you heard 'can't tell' on ${heardTie}/${close.length} pairs it calls near-equal`;
+}
+
+let resultsOpen = false;
+function renderResults() {
+  const rows = ranking().sort((x, y) => x.key.localeCompare(y.key) || y.strength - x.strength);
+  const byLang = {};
+  for (const p of PAIRS) for (const k of [p.a, p.b]) byLang[k] ??= p.lang;
+  const grouped = rows.sort((x, y) => (byLang[x.key] || "").localeCompare(byLang[y.key] || "") || y.strength - x.strength);
+  document.getElementById("results").innerHTML =
+    `<p>${consistency()}</p><p>${metricAgreement()}</p><table><tr><th>lang</th><th>voice|speaker</th><th>strength</th><th>comparisons</th></tr>` +
+    grouped.map((r) => `<tr><td>${byLang[r.key]}</td><td>${r.key}</td><td>${r.strength.toFixed(2)}</td><td>${r.played}</td></tr>`).join("") +
+    "</table>";
+}
+
+document.getElementById("toggle").onclick = () => {
+  resultsOpen = !resultsOpen;
+  document.getElementById("results").style.display = resultsOpen ? "block" : "none";
+  if (resultsOpen) renderResults();
+};
+document.getElementById("export").onclick = () => {
+  const lines = ["id,kind,lang,a,b,answer"].concat(
+    PAIRS.filter((p) => pairKey(p) in answers).map((p) => [p.id, p.kind, p.lang, p.a, p.b, answers[pairKey(p)]].map((v) => `"${v}"`).join(",")));
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
+  a.download = `pairs-${passSelect.value}.csv`; a.click();
+};
+passSelect.onchange = () => { usePass(passSelect.value); ++playToken; player.pause(); show(); if (resultsOpen) renderResults(); passSelect.blur(); };
+document.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "SELECT") return;
+  if (e.key === "1") answer("A");
+  else if (e.key === "2") answer("tie");
+  else if (e.key === "3") answer("B");
+  else if (e.key === "r" && current) playSide("A", () => playSide("B"));
+  else if (e.key === "a" && current) playSide("A");
+  else if (e.key === "b" && current) playSide("B");
+  else if (e.key === "u" && history.length) { delete answers[history.pop()]; save(); ++playToken; player.pause(); show(); }
+});
+document.body.addEventListener("click", function start() { document.body.removeEventListener("click", start); show(); }, { once: true });
+usePass(passSelect.value);
+document.getElementById("progress").textContent = "click anywhere to start";
+</script>

@@ -1,0 +1,9 @@
+{
+  "es_ES-davefx-medium|0": {"audio": "bad", "timbre": "natural", "prosody": "natural", "tempo": "ok", "note": "reasonable prosody, $3 mic in a blender"},
+  "es_ES-sharvard-medium|M": {"audio": "clean", "timbre": "robotic", "prosody": "", "tempo": "ok", "note": "very clear but a robot (rated on an unspecified speaker)"},
+  "es_ES-sharvard-medium|F": {"audio": "clean", "timbre": "robotic", "prosody": "", "tempo": "ok", "note": "very clear but a robot (rated on an unspecified speaker)"},
+  "es_ES-carlfm-x_low|0": {"audio": "ok", "timbre": "natural", "prosody": "natural", "tempo": "ok", "note": "between davefx and sharvard"},
+  "es_MX-ald-medium|0": {"audio": "", "timbre": "", "prosody": "", "tempo": "slow", "note": "so slow it sounds drunk"},
+  "es_MX-claude-high|0": {"audio": "clean", "timbre": "robotic", "prosody": "", "tempo": "ok", "note": "really clear, robot voice"},
+  "es_AR-daniela-high|0": {"audio": "clean", "timbre": "natural", "prosody": "natural", "tempo": "ok", "lineup": true, "note": "very good; Argentinian"}
+}

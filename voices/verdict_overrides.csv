@@ -1,0 +1,6 @@
+voice,speaker,human,audio,reason
+kokoro-jf_tebukuro,0,,fail,relisten: audio not good
+yt-chinese_female,0,,fail,relisten: debatable, like whispering too close to the mic
+de_DE-karlsson-low,0,pass,fail,relisten: not a robot, just low quality
+kokoro-ff_siwis,0,pass,,relisten: not a robot
+nl_BE-nathalie-medium,0,pass,,relisten: not a robot

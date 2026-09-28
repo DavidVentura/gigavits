@@ -1,0 +1,12 @@
+[workspace]
+
+[package]
+name = "phoneme-coverage"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+piper-rs = { path = "../../piper-rs" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
