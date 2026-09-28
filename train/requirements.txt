@@ -1,0 +1,13 @@
+# Versions the laptop CPU tests ran with. On a CUDA box install the matching CUDA torch build
+# (e.g. --index-url https://download.pytorch.org/whl/cu128) instead of +cpu.
+torch==2.13.0
+lightning==2.6.6
+numpy==2.5.3
+librosa==1.0.0
+soundfile==0.14.0
+onnx==1.23.0
+onnxruntime==1.30.0
+onnxscript==0.7.2
+cython
+setuptools
+pytest

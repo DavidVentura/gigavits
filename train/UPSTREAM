@@ -1,0 +1,11 @@
+Forked from https://github.com/OHF-Voice/piper1-gpl at commit efffbfb226bfb511ebbcf55d0cecd8b35a89743d
+(2026-09-28), src/piper/train/vits. Licence: GPL-3.0-or-later (COPYING).
+
+Vendored into gigatrain/vits/ unchanged: attentions.py, commons.py, losses.py, models.py, modules.py,
+transforms.py, monotonic_align/core.pyx.
+Changed: mel_processing.py (dropped the per-call min/max range prints, which force a GPU sync);
+monotonic_align/__init__.py (float32 contiguous input), monotonic_align/setup.py (setuptools; distutils
+is gone in Python 3.12).
+
+Ideas taken from https://github.com/ayutaz/piper-plus (MIT, commit d2cf6eda51b9f0a17fb5dd670bc8621ebc71cb01):
+language embedding added to the speaker embedding to form g. No piper-plus code is included.

@@ -1,0 +1,9 @@
+.venv/
+runs/
+gigatrain/vits/monotonic_align/build/
+gigatrain/vits/monotonic_align/core.c
+*.so
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+.pytest_tmp/

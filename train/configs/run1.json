@@ -1,0 +1,22 @@
+{
+  "data": {
+    "shards": ["/data/shards/stage-a"],
+    "token_table": "../tokens/table.json",
+    "batch_size": 32,
+    "num_workers": null,
+    "prefetch_factor": 4,
+    "steps_per_epoch": 1000,
+    "bucket_batches": 32,
+    "min_seconds": 0.5,
+    "max_seconds": 15.0,
+    "val_items": 256
+  },
+  "schedule": {"warmup_steps": 3000, "gan_start_step": 30000, "adversarial_ramp_steps": 20000, "adversarial_weight": 0.02},
+  "optim": {"learning_rate": 0.0002, "learning_rate_d": 0.0001, "lr_final_ratio": 0.1, "grad_clip": null},
+  "precision": "bf16-mixed",
+  "seed": 1234,
+  "max_steps": 500000,
+  "log_every_n_steps": 50,
+  "keep_every_n_epochs": 25,
+  "cudnn_benchmark": true
+}
