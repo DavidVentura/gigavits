@@ -4,6 +4,7 @@
 *.csv
 *.onnx
 *.mnn
+*.log
 **/__pycache__
 coverage/work/*
 quality/venv/*
@@ -19,7 +20,7 @@ voices/candidates/
 voices/*.html
 !voices/*.template.html
 quality/models/*.onnx
-# Listening verdicts are hand-made input, not generated output.
+# verdicts were made by listenting to every sample, keep em
 !voices/verdicts.csv
 !voices/verdict_overrides.csv
 runs/
@@ -28,9 +29,7 @@ eval/models/
 eval/venv/
 generate/out/
 generate/.venv/
-# Copies of the Translator app's catalog_sources/source_catalog.json and app/src/main/assets/index_v6.json;
-# calibration/pipeline/upload.sh sends them to the box.
 generate/data/source_catalog.json
 generate/data/mnn_catalog.json
-# `python -m gigagen <config> select` output, rebuilt from coverage/work; upload.sh sends them to the box.
 generate/sentences/
+calibration/logs/
