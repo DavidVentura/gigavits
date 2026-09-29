@@ -182,7 +182,9 @@ def _source_job(path: Path) -> tuple[TrainConfig, dict, int, dict]:
 def _job_config(args: argparse.Namespace, source: TrainConfig) -> TrainConfig:
     """The job's own data/optimisation settings with the source run's model and audio shapes."""
     config = _with_cli_overrides(load_config(args.config), args)
-    return dataclasses.replace(config, model=source.model, audio=source.audio)
+    # These jobs see one language or one speaker; a batch cannot span more languages than that.
+    data = dataclasses.replace(config.data, languages_per_batch=1)
+    return dataclasses.replace(config, model=source.model, audio=source.audio, data=data)
 
 
 def _model_state(state: dict) -> dict:

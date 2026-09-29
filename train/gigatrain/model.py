@@ -105,11 +105,15 @@ def speaker_adversary_loss(logits: torch.Tensor, sid: torch.Tensor, lid: torch.T
     are skipped: there, knowing the speaker means knowing the language, and removing that would strip
     language information from the front end."""
     allowed = mask[lid]
-    active = allowed.sum(1) > 1
-    if not bool(active.any()):
-        return logits.new_zeros(())
+    active = (allowed.sum(1) > 1).float()
     restricted = logits.float().masked_fill(~allowed, float("-inf"))
-    return F.cross_entropy(restricted[active], sid[active])
+    # Averaged over active items by arithmetic rather than by selecting them, which would sync.
+    per_item = F.cross_entropy(restricted, sid, reduction="none") * active
+    return per_item.sum() / active.sum().clamp_min(1.0)
+
+
+# (language ID, batch rows of that language) for every language present in a batch.
+LanguageRows = tuple[tuple[int, torch.Tensor], ...]
 
 
 @dataclass
@@ -182,15 +186,10 @@ class MultilingualVits(nn.Module):
         x_mask = torch.unsqueeze(commons.sequence_mask(x_lengths, h.size(2)), 1).type_as(h)
         return h, x_mask
 
-    def _language_groups(self, lid: torch.Tensor) -> list[tuple[int, torch.Tensor]]:
-        present = torch.unique(lid).tolist()
-        return [(language, (lid == language).nonzero(as_tuple=True)[0]) for language in present]
-
-    def encode_text(self, x: torch.Tensor, x_lengths: torch.Tensor, lid: torch.Tensor) -> TextEncoding:
+    def encode_text(self, x: torch.Tensor, x_lengths: torch.Tensor, language_rows: LanguageRows) -> TextEncoding:
         """Each item goes through its own language's front end; results are scattered back in order."""
         h, x_mask = self.embed(x, x_lengths)
-        groups = self._language_groups(lid)
-        outputs = [(index, self.front_end(language).enc_p(h[index], x_mask[index])) for language, index in groups]
+        outputs = [(index, self.front_end(language).enc_p(h[index], x_mask[index])) for language, index in language_rows]
         hidden = h.new_zeros(h.shape).to(outputs[0][1][0].dtype)
         m_p = hidden.new_zeros(h.size(0), self.shape.inter_channels, h.size(2))
         logs_p = torch.zeros_like(m_p)
@@ -200,12 +199,12 @@ class MultilingualVits(nn.Module):
             logs_p = logs_p.index_copy(0, index, logs_l)
         return TextEncoding(hidden, m_p, logs_p, x_mask.to(hidden.dtype))
 
-    def duration_nll(self, text: TextEncoding, w: torch.Tensor, g: torch.Tensor, lid: torch.Tensor) -> torch.Tensor:
+    def duration_nll(self, text: TextEncoding, w: torch.Tensor, g: torch.Tensor, language_rows: LanguageRows) -> torch.Tensor:
         """Per-item negative log-likelihood of the durations w [b, 1, t_x] under each language's SDP."""
         nll = w.new_zeros(w.size(0), dtype=torch.float32)
         # The SDP's flows take logs and exps of durations; bf16 there produces NaNs.
         with autocast(w.device.type, enabled=False):
-            for language, index in self._language_groups(lid):
+            for language, index in language_rows:
                 dp = self.front_end(language).dp
                 nll_l = dp(text.x[index].float(), text.x_mask[index].float(), w[index].float(), g=g[index].float())
                 nll = nll.index_copy(0, index, nll_l.float())
@@ -221,18 +220,20 @@ class MultilingualVits(nn.Module):
         lid: torch.Tensor,
         cid: torch.Tensor,
         durations: torch.Tensor,
-        has_durations: torch.Tensor,
+        teacher_rows: torch.Tensor,
+        searched_rows: torch.Tensor,
+        language_rows: LanguageRows,
     ) -> Latent:
         # Imported here so export and inference work without the compiled MAS kernel.
         from .alignment import alignment
 
-        text = self.encode_text(x, x_lengths, lid)
+        text = self.encode_text(x, x_lengths, language_rows)
         g = self.cond(sid, lid, cid)
         z, m_q, logs_q, y_mask = self.enc_q(spec, spec_lengths, g=g)
         z_p = self.flow(z, y_mask, g=g)
-        attn = alignment(durations, has_durations, text.x_mask, y_mask, z_p, text.m_p, text.logs_p)
+        attn = alignment(durations, teacher_rows, searched_rows, text.x_mask, y_mask, z_p, text.m_p, text.logs_p)
         w = attn.sum(2)
-        duration_loss = self.duration_nll(text, w, g, lid).sum() / text.x_mask.float().sum()
+        duration_loss = self.duration_nll(text, w, g, language_rows).sum() / text.x_mask.float().sum()
         return Latent(
             text=text,
             g=g,

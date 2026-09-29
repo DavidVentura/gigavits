@@ -24,13 +24,12 @@ def test_mixed_batch_uses_durations_where_present_and_mas_elsewhere():
     torch.manual_seed(0)
     x_mask, y_mask = masks([4, 3], [8, 7])
     durations = torch.tensor([[1, 1, 1, 5], [0, 0, 0, 0]])
-    has = torch.tensor([True, False])
     channels = 5
     z_p = torch.randn(2, channels, 8)
     # Make item 0's prior favour a different alignment than its teacher durations.
     m_p = torch.randn(2, channels, 4)
     logs_p = torch.zeros(2, channels, 4)
-    attn = alignment(durations, has, x_mask, y_mask, z_p, m_p, logs_p)
+    attn = alignment(durations, torch.tensor([0]), torch.tensor([1]), x_mask, y_mask, z_p, m_p, logs_p)
     w = attn.sum(2).squeeze(1)
     assert w[0].tolist() == [1, 1, 1, 5]
     # MAS gives every phoneme at least one frame and covers every frame once, monotonically.
@@ -43,5 +42,19 @@ def test_mixed_batch_uses_durations_where_present_and_mas_elsewhere():
 def test_all_teacher_batch_never_needs_the_prior():
     x_mask, y_mask = masks([2], [3])
     nan = torch.full((1, 2, 2), float("nan"))
-    attn = alignment(torch.tensor([[1, 2]]), torch.tensor([True]), x_mask, y_mask, torch.zeros(1, 2, 3), nan, nan)
+    none = torch.zeros(0, dtype=torch.long)
+    attn = alignment(torch.tensor([[1, 2]]), torch.tensor([0]), none, x_mask, y_mask, torch.zeros(1, 2, 3), nan, nan)
     assert attn.sum(2).squeeze().tolist() == [1, 2]
+
+
+def test_all_teacher_batch_never_runs_mas(monkeypatch):
+    import gigatrain.alignment as module
+
+    def fail(*args):
+        raise AssertionError("MAS ran")
+
+    monkeypatch.setattr(module, "maximum_path", fail)
+    x_mask, y_mask = masks([2, 2], [3, 3])
+    attn = alignment(torch.tensor([[1, 2], [2, 1]]), torch.tensor([0, 1]), torch.zeros(0, dtype=torch.long),
+                     x_mask, y_mask, torch.zeros(2, 2, 3), torch.zeros(2, 2, 2), torch.zeros(2, 2, 2))
+    assert attn.sum(2).squeeze(1).tolist() == [[1, 2], [2, 1]]

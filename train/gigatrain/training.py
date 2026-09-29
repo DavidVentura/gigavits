@@ -13,7 +13,6 @@ from .config import AudioConfig, ScheduleConfig, TrainConfig, parse_dataclass
 from .data import Batch
 from .ids import IdMaps
 from .model import Latent, MultilingualVits, language_speaker_mask, make_decoder, masked_mean, speaker_adversary_loss
-from .vits.commons import rand_slice_segments, slice_segments
 from .vits.losses import discriminator_loss, feature_loss, generator_loss, kl_loss
 from .vits.mel_processing import mel_spectrogram_torch, spec_to_mel_torch, spectrogram_torch
 from .vits.models import MultiPeriodDiscriminator
@@ -133,7 +132,7 @@ class _Job(L.LightningModule):
         spec, spec_lengths = spectrogram(batch.audio, batch.audio_lengths, self.config.audio)
         latent = self.model.latent(
             batch.phoneme_ids, batch.phoneme_lengths, spec, spec_lengths,
-            batch.sid, batch.lid, batch.cid, batch.durations, batch.has_durations,
+            batch.sid, batch.lid, batch.cid, batch.durations, batch.teacher_rows, batch.searched_rows, batch.language_rows,
         )
         return latent, spec, spec_lengths
 
@@ -142,6 +141,18 @@ class _Job(L.LightningModule):
 
     def _exponential(self, optimizer) -> torch.optim.lr_scheduler.ExponentialLR:
         return torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=lr_gamma(self.config))
+
+
+def slice_segments(x: torch.Tensor, starts: torch.Tensor, size: int) -> torch.Tensor:
+    """x [b, c, t] -> [b, c, size] from per-row starts, as one gather (the upstream per-row loop
+    reads each start back to the CPU)."""
+    index = (starts.unsqueeze(1) + torch.arange(size, device=x.device)).unsqueeze(1).expand(-1, x.size(1), -1)
+    return torch.gather(x, 2, index)
+
+
+def rand_slice_segments(x: torch.Tensor, lengths: torch.Tensor, size: int) -> tuple[torch.Tensor, torch.Tensor]:
+    starts = (torch.rand(x.size(0), device=x.device) * (lengths - size + 1)).long()
+    return slice_segments(x, starts, size), starts
 
 
 def reconstruct(decoder, z: torch.Tensor, g: torch.Tensor, spec: torch.Tensor, spec_lengths: torch.Tensor, audio: torch.Tensor, cfg: AudioConfig) -> Reconstruction:
@@ -268,8 +279,9 @@ class FrontEndJob(_Job):
             weight[self.ids.lid(target)] = weight[self.ids.lid(source)]
 
     def _losses(self, batch: Batch) -> dict[str, torch.Tensor]:
-        if bool((~torch.isin(batch.lid, torch.tensor(self.lids, device=batch.lid.device))).any()):
-            raise ValueError("front-end job received items of a language it does not train")
+        present = {lid for lid, _ in batch.language_rows}
+        if not present <= set(self.lids):
+            raise ValueError(f"front-end job received languages {sorted(present - set(self.lids))} it does not train")
         latent, _, _ = self._latent(batch)
         with autocast(self.device.type, enabled=False):
             kl = kl_loss(latent.z_p, latent.logs_q, latent.m_p, latent.logs_p, latent.y_mask)
@@ -316,8 +328,6 @@ class DecoderJob(_Job):
         self.voice_dec.load_state_dict(self.model.dec.state_dict())
 
     def _reconstruct(self, batch: Batch) -> Reconstruction:
-        if bool((batch.sid != self.ids.sid(self.speaker)).any()):
-            raise ValueError("decoder job received another speaker's items")
         spec, spec_lengths = spectrogram(batch.audio, batch.audio_lengths, self.config.audio)
         with torch.no_grad():
             g = self.model.cond(batch.sid, batch.lid, batch.cid)

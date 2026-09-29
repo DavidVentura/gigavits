@@ -69,8 +69,12 @@ class DataConfig:
     # Batches drawn together and sorted by length before being split, so padding stays small while
     # the sampling distribution is unchanged.
     bucket_batches: int = 32
+    # Each language in a batch is a separate front-end pass, and steps are bound by the CPU
+    # launching their kernels, so batches hold few languages (sampling.plan_epoch).
+    languages_per_batch: int = 1
     min_seconds: float = 0.5
-    max_seconds: float = 15.0
+    # Longer items are dropped at load: they set peak memory, and so the batch size.
+    max_utterance_s: float = 12.0
     val_items: int = 64
 
 
@@ -108,7 +112,8 @@ class TrainConfig:
     max_steps: int = 500_000
     log_every_n_steps: int = 50
     keep_every_n_epochs: int = 25
-    cudnn_benchmark: bool = True
+    # Off by default: with variable lengths cuDNN keeps re-tuning (measured 9% slower).
+    cudnn_benchmark: bool = False
 
     def __post_init__(self) -> None:
         hop = 1
@@ -118,6 +123,8 @@ class TrainConfig:
             raise ConfigError(f"upsample rates {self.model.upsample_rates} give hop {hop}, audio hop is {self.audio.hop_length}")
         if self.audio.segment_size % self.audio.hop_length:
             raise ConfigError("segment_size must be a multiple of hop_length")
+        if not 1 <= self.data.languages_per_batch <= self.data.batch_size:
+            raise ConfigError("languages_per_batch must be within 1..batch_size")
         if self.data.min_seconds * self.audio.sample_rate < self.audio.segment_size:
             raise ConfigError("min_seconds must cover at least one training segment")
         if not 0.0 < self.optim.lr_final_ratio <= 1.0:

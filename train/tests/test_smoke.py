@@ -14,7 +14,7 @@ from gigatrain.records import Vocab
 STEPS = 4
 
 
-def tiny_config(*shards: Path, precision: str = "32-true", steps_per_epoch: int = 2) -> dict:
+def tiny_config(*shards: Path, precision: str = "32-true", steps_per_epoch: int = 2, languages_per_batch: int = 1) -> dict:
     return {
         "data": {
             "shards": [str(s) for s in shards],
@@ -23,9 +23,10 @@ def tiny_config(*shards: Path, precision: str = "32-true", steps_per_epoch: int 
             "num_workers": 2,
             "prefetch_factor": 2,
             "steps_per_epoch": steps_per_epoch,
+            "languages_per_batch": languages_per_batch,
             "bucket_batches": 2,
             "min_seconds": 0.4,
-            "max_seconds": 5.0,
+            "max_utterance_s": 5.0,
             "val_items": 2,
         },
         "model": {
@@ -136,7 +137,10 @@ def test_bf16_back_end_runs_both_phases(workspace):
     run = root / "bf16"
     run.mkdir()
     (run / "ids.json").write_text((root / "run" / "ids.json").read_text())
-    main(["train", "--config", str(config), "--run-dir", str(run), "--precision", "bf16-mixed"])
+    # Two languages per batch, so the mixed-language front-end routing runs too.
+    mixed = root / "config-mixed.json"
+    mixed.write_text(json.dumps(tiny_config(root / "shard", languages_per_batch=2)))
+    main(["train", "--config", str(mixed), "--run-dir", str(run), "--precision", "bf16-mixed"])
     values = losses(run / "backend", "train_loss_g")
     assert len(values) == STEPS and all(math.isfinite(v) for v in values.values())
     assert len(losses(run / "backend", "train_gen")) == 2

@@ -1,15 +1,31 @@
-"""Language-balanced, length-bucketed batch sampling."""
+"""Language-balanced, language-grouped, length-bucketed batch sampling."""
 from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
+from dataclasses import dataclass
 
 import numpy as np
 from torch.utils.data import Sampler
 
 
-def sampling_probabilities(languages: Sequence[str], weights: Sequence[float], seconds: Sequence[float]) -> np.ndarray:
-    """Per-item probability: languages get mass proportional to sqrt(hours), items within a language
-    share their language's mass in proportion to their tier weight."""
+@dataclass(frozen=True)
+class SamplingPlan:
+    """Languages get mass proportional to sqrt(hours); items within a language are drawn in
+    proportion to their tier weight."""
+
+    language_mass: np.ndarray
+    members: tuple[np.ndarray, ...]
+    member_probabilities: tuple[np.ndarray, ...]
+
+    def item_probabilities(self, n_items: int) -> np.ndarray:
+        """Marginal per-item probability when one language is drawn per item."""
+        p = np.zeros(n_items)
+        for mass, members, within in zip(self.language_mass, self.members, self.member_probabilities, strict=True):
+            p[members] = mass * within
+        return p
+
+
+def sampling_plan(languages: Sequence[str], weights: Sequence[float], seconds: Sequence[float]) -> SamplingPlan:
     languages = np.asarray(languages)
     weights = np.asarray(weights, dtype=np.float64)
     seconds = np.asarray(seconds, dtype=np.float64)
@@ -17,30 +33,62 @@ def sampling_probabilities(languages: Sequence[str], weights: Sequence[float], s
         raise ValueError("languages, weights and seconds must be equally long and non-empty")
     if (weights <= 0).any() or (seconds <= 0).any():
         raise ValueError("weights and durations must be positive")
-    names, index = np.unique(languages, return_inverse=True)
+    _, index = np.unique(languages, return_inverse=True)
     hours = np.bincount(index, weights=seconds) / 3600.0
-    language_mass = np.sqrt(hours) / np.sqrt(hours).sum()
-    weight_per_language = np.bincount(index, weights=weights)
-    return language_mass[index] * weights / weight_per_language[index]
+    members = tuple(np.flatnonzero(index == language) for language in range(len(hours)))
+    return SamplingPlan(
+        language_mass=np.sqrt(hours) / np.sqrt(hours).sum(),
+        members=members,
+        member_probabilities=tuple(weights[m] / weights[m].sum() for m in members),
+    )
+
+
+def sampling_probabilities(languages: Sequence[str], weights: Sequence[float], seconds: Sequence[float]) -> np.ndarray:
+    return sampling_plan(languages, weights, seconds).item_probabilities(len(languages))
+
+
+def _split(total: int, parts: int) -> list[int]:
+    return [total // parts + (1 if i < total % parts else 0) for i in range(parts)]
 
 
 def plan_epoch(
-    probabilities: np.ndarray,
+    plan: SamplingPlan,
     lengths: np.ndarray,
     batch_size: int,
     num_batches: int,
     bucket_batches: int,
+    languages_per_batch: int,
     rng: np.random.Generator,
 ) -> list[list[int]]:
-    """Draw num_batches * batch_size items with replacement, sort each group of bucket_batches
-    batches by length so a batch holds similar lengths, then shuffle the batch order."""
-    drawn = rng.choice(len(probabilities), size=num_batches * batch_size, replace=True, p=probabilities)
-    group = bucket_batches * batch_size
-    batches = []
-    for start in range(0, len(drawn), group):
-        chunk = drawn[start:start + group]
-        chunk = chunk[np.argsort(lengths[chunk], kind="stable")]
-        batches.extend(chunk[i:i + batch_size].tolist() for i in range(0, len(chunk), batch_size))
+    """Each batch draws languages_per_batch distinct languages by language mass, splits its items
+    evenly between them and draws each part's items by weight, so a step runs that many front ends.
+
+    Length bucketing: within a group of bucket_batches batches, each language's items for the
+    group are drawn together, sorted by length and handed out to its parts in batch order, so the
+    k-th batch of a group gets short or long items from every one of its languages alike. Batch
+    order is shuffled afterwards. With several languages per batch, languages are drawn without
+    replacement within a batch, which flattens their frequencies slightly towards uniform.
+    """
+    n_languages = len(plan.language_mass)
+    if not 1 <= languages_per_batch <= min(n_languages, batch_size):
+        raise ValueError(f"languages_per_batch {languages_per_batch} must be within 1..{min(n_languages, batch_size)}")
+    sizes = _split(batch_size, languages_per_batch)
+    batches: list[list[int]] = []
+    for start in range(0, num_batches, bucket_batches):
+        count = min(bucket_batches, num_batches - start)
+        chosen = [rng.choice(n_languages, languages_per_batch, replace=False, p=plan.language_mass) for _ in range(count)]
+        group: list[list[int]] = [[] for _ in range(count)]
+        for language in np.unique(np.concatenate(chosen)):
+            parts = [(b, sizes[slot]) for b in range(count) for slot, lang in enumerate(chosen[b]) if lang == language]
+            drawn = rng.choice(
+                plan.members[language], sum(n for _, n in parts), replace=True, p=plan.member_probabilities[language]
+            )
+            drawn = drawn[np.argsort(lengths[drawn], kind="stable")]
+            offset = 0
+            for b, n in parts:
+                group[b].extend(drawn[offset:offset + n].tolist())
+                offset += n
+        batches.extend(group)
     order = rng.permutation(len(batches))
     return [batches[i] for i in order]
 
@@ -52,21 +100,23 @@ class BucketedBatchSampler(Sampler[list[int]]):
 
     def __init__(
         self,
-        probabilities: np.ndarray,
+        plan: SamplingPlan,
         lengths: np.ndarray,
         batch_size: int,
         batches_per_epoch: int,
         bucket_batches: int,
+        languages_per_batch: int,
         seed: int,
         rank: int,
         world_size: int,
     ):
         super().__init__()
-        self.probabilities = probabilities
+        self.plan = plan
         self.lengths = lengths
         self.batch_size = batch_size
         self.batches_per_epoch = batches_per_epoch
         self.bucket_batches = bucket_batches
+        self.languages_per_batch = languages_per_batch
         self.seed = seed
         self.rank = rank
         self.world_size = world_size
@@ -81,11 +131,12 @@ class BucketedBatchSampler(Sampler[list[int]]):
     def __iter__(self) -> Iterator[list[int]]:
         rng = np.random.default_rng([self.seed, self.epoch])
         batches = plan_epoch(
-            self.probabilities,
+            self.plan,
             self.lengths,
             self.batch_size,
             self.batches_per_epoch * self.world_size,
             self.bucket_batches,
+            self.languages_per_batch,
             rng,
         )
         return iter(batches[self.rank::self.world_size])

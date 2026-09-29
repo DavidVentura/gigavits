@@ -17,7 +17,7 @@ from torch.utils.data import DataLoader, Dataset
 from .config import AudioConfig, DataConfig
 from .ids import IdMaps
 from .records import Record, Vocab, parse_manifest
-from .sampling import BucketedBatchSampler, sampling_probabilities
+from .sampling import BucketedBatchSampler, sampling_plan
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,10 +63,17 @@ def check_durations(item: Item, hop_length: int) -> None:
 
 def select_items(items: list[Item], data: DataConfig, audio: AudioConfig) -> list[Item]:
     """Keep items within the configured length range; teacher durations must match the audio."""
-    low, high = data.min_seconds * audio.sample_rate, data.max_seconds * audio.sample_rate
+    low, high = data.min_seconds * audio.sample_rate, data.max_utterance_s * audio.sample_rate
     kept = [i for i in items if low <= i.num_samples <= high]
-    if len(kept) != len(items):
-        _LOGGER.info("length filter kept %d of %d items", len(kept), len(items))
+    dropped: dict[str, list[float]] = {}
+    for item in items:
+        if not low <= item.num_samples <= high:
+            dropped.setdefault(item.record.language, []).append(item.num_samples / audio.sample_rate)
+    for language, seconds in sorted(dropped.items()):
+        _LOGGER.info(
+            "%s: dropped %d items (%.2f h) outside %.1f-%.1f s",
+            language, len(seconds), sum(seconds) / 3600, data.min_seconds, data.max_utterance_s,
+        )
     for item in kept:
         check_durations(item, audio.hop_length)
     return kept
@@ -94,7 +101,11 @@ class Batch:
     phoneme_ids: torch.Tensor
     phoneme_lengths: torch.Tensor
     durations: torch.Tensor
-    has_durations: torch.Tensor
+    # Row indices worked out here on the CPU, so the training step never asks the GPU which rows
+    # have teacher durations or which languages are present (each such question is a sync).
+    teacher_rows: torch.Tensor
+    searched_rows: torch.Tensor
+    language_rows: tuple[tuple[int, torch.Tensor], ...]
     audio: torch.Tensor
     audio_lengths: torch.Tensor
     sid: torch.Tensor
@@ -106,7 +117,10 @@ class Batch:
 
     def pin_memory(self) -> Batch:
         # DataLoader pins only tensors, mappings and sequences; a dataclass must pin itself.
-        return Batch(**{f.name: getattr(self, f.name).pin_memory() for f in fields(self)})
+        values = {f.name: getattr(self, f.name) for f in fields(self)}
+        pinned = {k: v.pin_memory() for k, v in values.items() if isinstance(v, torch.Tensor)}
+        rows = tuple((lid, index.pin_memory()) for lid, index in self.language_rows)
+        return Batch(**(values | pinned | {"language_rows": rows}))
 
 
 class ShardDataset(Dataset):
@@ -151,7 +165,12 @@ def collate(examples: list[Example]) -> Batch:
         phoneme_ids=phoneme_ids,
         phoneme_lengths=torch.tensor([e.phoneme_ids.numel() for e in examples]),
         durations=durations,
-        has_durations=torch.tensor([e.durations is not None for e in examples]),
+        teacher_rows=torch.tensor([i for i, e in enumerate(examples) if e.durations is not None], dtype=torch.long),
+        searched_rows=torch.tensor([i for i, e in enumerate(examples) if e.durations is None], dtype=torch.long),
+        language_rows=tuple(
+            (lid, torch.tensor([i for i, e in enumerate(examples) if e.lid == lid], dtype=torch.long))
+            for lid in sorted({e.lid for e in examples})
+        ),
         audio=audio,
         audio_lengths=torch.tensor([e.audio.numel() for e in examples]),
         sid=torch.tensor([e.sid for e in examples]),
@@ -193,7 +212,7 @@ class ShardDataModule(L.LightningDataModule):
     def train_dataloader(self) -> DataLoader:
         records = [i.record for i in self.train_items]
         sampler = BucketedBatchSampler(
-            probabilities=sampling_probabilities(
+            plan=sampling_plan(
                 [r.language for r in records],
                 [r.weight for r in records],
                 [i.num_samples / self.sample_rate for i in self.train_items],
@@ -202,6 +221,7 @@ class ShardDataModule(L.LightningDataModule):
             batch_size=self.data.batch_size,
             batches_per_epoch=self.data.steps_per_epoch,
             bucket_batches=self.data.bucket_batches,
+            languages_per_batch=self.data.languages_per_batch,
             seed=self.seed,
             rank=self.trainer.global_rank,
             world_size=self.trainer.world_size,

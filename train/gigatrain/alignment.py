@@ -29,26 +29,26 @@ def teacher_path(durations: torch.Tensor, attn_mask: torch.Tensor) -> torch.Tens
 
 def alignment(
     durations: torch.Tensor,
-    has_durations: torch.Tensor,
+    teacher_rows: torch.Tensor,
+    searched_rows: torch.Tensor,
     x_mask: torch.Tensor,
     y_mask: torch.Tensor,
     z_p: torch.Tensor,
     m_p: torch.Tensor,
     logs_p: torch.Tensor,
 ) -> torch.Tensor:
-    """Hard alignment [b, 1, t_y, t_x]: teacher durations where an item has them, MAS elsewhere.
+    """Hard alignment [b, 1, t_y, t_x]: teacher durations for teacher_rows, MAS for searched_rows.
 
-    MAS runs on CPU and only for the items that need it.
+    MAS runs on CPU and only for the rows that need it; a batch without such rows never leaves the
+    device. Row counts are tensor shapes, so checking them does not sync.
     """
     attn_mask = torch.unsqueeze(x_mask, 2) * torch.unsqueeze(y_mask, -1)
     attn = torch.zeros_like(attn_mask)
-    teacher = has_durations.nonzero(as_tuple=True)[0]
-    searched = (~has_durations).nonzero(as_tuple=True)[0]
-    if teacher.numel():
-        attn[teacher] = teacher_path(durations[teacher], attn_mask[teacher])
-    if searched.numel():
+    if teacher_rows.numel():
+        attn[teacher_rows] = teacher_path(durations[teacher_rows], attn_mask[teacher_rows])
+    if searched_rows.numel():
         with torch.no_grad():
-            neg_cent = neg_cross_entropy(z_p[searched], m_p[searched], logs_p[searched])
-            path = maximum_path(neg_cent, attn_mask[searched].squeeze(1))
-        attn[searched] = path.unsqueeze(1).to(attn.dtype)
+            neg_cent = neg_cross_entropy(z_p[searched_rows], m_p[searched_rows], logs_p[searched_rows])
+            path = maximum_path(neg_cent, attn_mask[searched_rows].squeeze(1))
+        attn[searched_rows] = path.unsqueeze(1).to(attn.dtype)
     return attn.detach()

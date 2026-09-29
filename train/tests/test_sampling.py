@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from gigatrain.sampling import BucketedBatchSampler, plan_epoch, sampling_probabilities
+from gigatrain.sampling import BucketedBatchSampler, plan_epoch, sampling_plan, sampling_probabilities
 
 
 def test_languages_get_sqrt_hours_and_items_share_by_weight():
@@ -26,27 +26,45 @@ def test_invalid_inputs_raise():
         sampling_probabilities(["en"], [1.0, 2.0], [1.0])
 
 
-def test_plan_epoch_buckets_by_length():
+def uniform_plan(languages):
+    return sampling_plan(languages, np.ones(len(languages)), np.ones(len(languages)))
+
+
+def test_one_language_per_batch_and_buckets_by_length():
     rng = np.random.default_rng(0)
-    lengths = rng.integers(1, 1000, 500)
-    p = np.full(500, 1 / 500)
-    batches = plan_epoch(p, lengths, batch_size=8, num_batches=40, bucket_batches=10, rng=rng)
-    assert len(batches) == 40 and all(len(b) == 8 for b in batches)
+    languages = np.arange(600) % 6
+    lengths = rng.integers(1, 1000, 600)
+    batches = plan_epoch(uniform_plan(languages), lengths, 8, 60, 10, 1, rng)
+    assert len(batches) == 60 and all(len(b) == 8 for b in batches)
+    assert all(len(set(languages[b])) == 1 for b in batches)
     spread = np.mean([np.ptp(lengths[b]) for b in batches])
-    unsorted = np.mean([np.ptp(lengths[rng.choice(500, 8)]) for _ in range(200)])
-    assert spread < unsorted / 3
+    unsorted = np.mean([np.ptp(lengths[rng.choice(600, 8)]) for _ in range(200)])
+    assert spread < unsorted / 2
 
 
-def test_plan_follows_probabilities():
-    rng = np.random.default_rng(1)
-    p = np.array([0.7, 0.2, 0.1])
-    batches = plan_epoch(p, np.array([1, 2, 3]), batch_size=10, num_batches=2000, bucket_batches=4, rng=rng)
-    counts = np.bincount(np.concatenate(batches), minlength=3) / 20000
-    assert counts == pytest.approx(p, abs=0.01)
+def test_k_languages_per_batch_split_evenly():
+    languages = np.arange(300) % 5
+    batches = plan_epoch(uniform_plan(languages), np.arange(300), 10, 40, 8, 3, np.random.default_rng(1))
+    for b in batches:
+        counts = sorted(np.bincount(languages[b], minlength=5))
+        assert counts == [0, 0, 3, 3, 4]
 
 
-def sampler(rank=0, world=1, seed=5):
-    return BucketedBatchSampler(np.full(50, 0.02), np.arange(50), 4, 6, 2, seed, rank, world)
+def test_frequencies_follow_language_mass_then_weight():
+    # en: 4 h (item weights 3:1), es: 1 h.
+    plan = sampling_plan(["en", "en", "es"], [3.0, 1.0, 2.0], [7200.0, 7200.0, 3600.0])
+    batches = plan_epoch(plan, np.array([1, 2, 3]), 10, 3000, 4, 1, np.random.default_rng(2))
+    counts = np.bincount(np.concatenate(batches), minlength=3) / 30000
+    assert counts == pytest.approx(plan.item_probabilities(3), abs=0.015)
+
+
+def test_too_many_languages_per_batch_raises():
+    with pytest.raises(ValueError):
+        plan_epoch(uniform_plan(np.array([0, 1])), np.array([1, 2]), 4, 1, 1, 3, np.random.default_rng(0))
+
+
+def sampler(rank=0, world=1, seed=5, k=2):
+    return BucketedBatchSampler(uniform_plan(np.arange(50) % 3), np.arange(50), 4, 6, 2, k, seed, rank, world)
 
 
 def test_sampler_is_a_function_of_seed_and_epoch():
@@ -59,6 +77,8 @@ def test_sampler_is_a_function_of_seed_and_epoch():
 
 
 def test_ranks_take_disjoint_batches_of_one_plan():
-    r0, r1 = sampler(0, 2), sampler(1, 2)
+    r0, r1, whole = sampler(0, 2), sampler(1, 2), BucketedBatchSampler(
+        uniform_plan(np.arange(50) % 3), np.arange(50), 4, 12, 2, 2, 5, 0, 1
+    )
     assert len(list(r0)) == len(list(r1)) == 6
-    assert list(r0) != list(r1)
+    assert list(r0) + list(r1) != [] and sorted(map(tuple, list(r0) + list(r1))) == sorted(map(tuple, list(whole)))

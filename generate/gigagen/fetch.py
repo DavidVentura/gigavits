@@ -124,10 +124,9 @@ def plan_fetch(config: Config) -> list[Needed]:
     engines = dict(parse_kokoro_list(p.kokoro_list.read_text(encoding="utf-8")))
     engines.update(parse_other_list(p.other_list.read_text(encoding="utf-8"), p.bucket_in_lists, p.bucket))
     rendered = {v for v in voices if v in piper or v in engines}
-    needed = [
-        Needed(path, index.get(str(path.relative_to(p.bucket))))
-        for path in required_paths(config, rendered, piper, engines, index)
-    ]
+    # catalog.load parses the config of every listed Piper voice, rendered or not
+    paths = set(required_paths(config, rendered, piper, engines, index)) | set(piper.values())
+    needed = [Needed(path, index.get(str(path.relative_to(p.bucket)))) for path in sorted(paths)]
     if any(isinstance(engines.get(v, (None,))[0], (KokoroSource, KokoroJaSource)) for v in rendered):
         needed.append(Needed(p.kokoro_source_onnx, Remote((config.kokoro_url,), None)))
     return needed
