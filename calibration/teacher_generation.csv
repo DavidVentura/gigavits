@@ -1,0 +1,7 @@
+host,file,procs,threads_per_proc,utterances,audio_seconds,audio_hours,wall_seconds,warmup_and_load_seconds,audio_sec_per_wall_sec,mean_utt_seconds
+host1,gen_1proc_1thread.json,1,1,20,150.2,0.042,15.3,2.6,9.78,7.51
+host1,gen_1proc_32threads.json,1,32,40,366.8,0.102,16.7,2.7,21.95,9.17
+host1,gen_30proc_2threads.json,30,2,900,6966.6,1.935,32.3,24.3,215.98,7.74
+host1,gen_60proc_1thread.json,60,1,900,6971.9,1.937,30.5,42.3,228.85,7.75
+host2,gen_16proc_2threads.json,16,2,900,6962.4,1.934,45.7,6.9,152.33,7.74
+host2,gen_1proc_1thread.json,1,1,20,150.7,0.042,8.1,1.1,18.72,7.54
