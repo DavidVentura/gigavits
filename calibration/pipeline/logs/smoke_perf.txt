@@ -1,0 +1,80 @@
+24 sps 0.926 samp/s 29.65 wait 0.001 peakGB 10.2 cond_ce=0.951 dur=1.385 kl=4.819 loss_g=35.057 mel=0.605 spk_ce=0.694
+49 sps 1.323 samp/s 42.34 wait 0.001 peakGB 10.3 cond_ce=0.877 dur=1.406 kl=4.133 loss_g=34.699 mel=0.613 spk_ce=0.704
+74 sps 1.293 samp/s 41.39 wait 0.001 peakGB 9.87 cond_ce=0.586 dur=1.301 kl=3.495 loss_g=30.663 mel=0.546 spk_ce=0.688
+99 sps 1.394 samp/s 44.61 wait 0.001 peakGB 11.8 cond_ce=0.388 dur=1.317 kl=3.252 loss_g=28.425 mel=0.506 spk_ce=0.695
+124 sps 1.371 samp/s 43.87 wait 0.001 peakGB 11.7 cond_ce=0.335 dur=1.289 kl=2.992 loss_g=28.922 mel=0.524 spk_ce=0.707
+149 sps 1.406 samp/s 45.00 wait 0.002 peakGB 11.9 cond_ce=0.300 dur=1.275 kl=2.959 loss_g=27.927 mel=0.504 spk_ce=0.696
+174 sps 1.452 samp/s 46.46 wait 0.002 peakGB 9.82 cond_ce=0.526 dur=1.312 kl=2.693 loss_g=29.254 mel=0.535 spk_ce=0.670
+199 sps 1.498 samp/s 47.96 wait 0.002 peakGB 11.8 cond_ce=0.183 dur=1.508 kl=2.847 loss_g=27.357 mel=0.491 spk_ce=0.702
+224 sps 1.562 samp/s 49.99 wait 0.002 peakGB 11.8 cond_ce=0.346 dur=1.634 kl=2.693 loss_g=28.614 mel=0.516 spk_ce=0.706
+249 sps 1.397 samp/s 44.72 wait 0.002 peakGB 10.0 cond_ce=0.272 dur=1.120 kl=2.531 loss_g=26.284 mel=0.481 spk_ce=0.693
+274 sps 1.468 samp/s 46.97 wait 0.002 peakGB 9.84 cond_ce=0.246 dur=1.209 kl=2.741 loss_g=26.048 mel=0.470 spk_ce=0.680
+299 sps 1.506 samp/s 48.19 wait 0.002 peakGB 10.2 cond_ce=0.161 dur=1.341 kl=2.556 loss_g=26.522 mel=0.484 spk_ce=0.699
+324 sps 1.474 samp/s 47.17 wait 0.002 peakGB 10.0 cond_ce=0.209 dur=1.163 kl=2.579 loss_g=25.131 mel=0.455 spk_ce=0.727
+349 sps 1.454 samp/s 46.54 wait 0.002 peakGB 10.3 cond_ce=0.190 dur=1.066 kl=2.543 loss_g=25.279 mel=0.462 spk_ce=0.697
+374 sps 1.379 samp/s 44.13 wait 0.002 peakGB 10.3 cond_ce=0.171 dur=1.177 kl=2.404 loss_g=24.981 mel=0.457 spk_ce=0.674
+399 sps 1.479 samp/s 47.34 wait 0.001 peakGB 11.7 cond_ce=0.106 dur=1.208 kl=2.291 loss_g=24.968 mel=0.459 spk_ce=0.723
+424 sps 1.468 samp/s 47.00 wait 0.001 peakGB 11.8 cond_ce=0.075 dur=1.268 kl=2.445 loss_g=24.630 mel=0.448 spk_ce=0.700
+449 sps 1.605 samp/s 51.36 wait 0.001 peakGB 11.8 cond_ce=0.123 dur=1.123 kl=2.557 loss_g=24.352 mel=0.441 spk_ce=0.717
+474 sps 1.419 samp/s 45.42 wait 0.002 peakGB 11.8 cond_ce=0.113 dur=1.168 kl=2.280 loss_g=24.139 mel=0.442 spk_ce=0.696
+499 sps 1.476 samp/s 47.23 wait 0.001 peakGB 11.8 cond_ce=0.178 dur=1.115 kl=2.336 loss_g=24.735 mel=0.454 spk_ce=0.686
+524 sps 1.050 samp/s 33.61 wait 0.001 peakGB 10.2 cond_ce=0.174 dur=1.253 kl=2.022 loss_g=24.729 mel=0.457 spk_ce=0.705
+549 sps 1.327 samp/s 42.47 wait 0.002 peakGB 10.2 cond_ce=0.217 dur=1.281 kl=2.355 loss_g=25.700 mel=0.471 spk_ce=0.664
+574 sps 1.236 samp/s 39.55 wait 0.002 peakGB 9.87 cond_ce=0.090 dur=1.218 kl=2.303 loss_g=23.919 mel=0.436 spk_ce=0.694
+599 sps 1.315 samp/s 42.08 wait 0.002 peakGB 11.8 cond_ce=0.071 dur=1.211 kl=2.489 loss_g=23.745 mel=0.429 spk_ce=0.690
+624 sps 1.322 samp/s 42.30 wait 0.002 peakGB 11.7 cond_ce=0.072 dur=1.242 kl=2.246 loss_g=24.046 mel=0.440 spk_ce=0.705
+649 sps 1.384 samp/s 44.30 wait 0.002 peakGB 11.9 cond_ce=0.087 dur=1.132 kl=2.317 loss_g=23.417 mel=0.427 spk_ce=0.688
+674 sps 1.380 samp/s 44.18 wait 0.002 peakGB 9.82 cond_ce=0.195 dur=1.209 kl=2.117 loss_g=24.634 mel=0.455 spk_ce=0.658
+699 sps 1.449 samp/s 46.37 wait 0.002 peakGB 11.8 cond_ce=0.056 dur=1.281 kl=2.554 loss_g=24.576 mel=0.444 spk_ce=0.705
+724 sps 1.497 samp/s 47.91 wait 0.002 peakGB 11.8 cond_ce=0.151 dur=1.324 kl=2.292 loss_g=24.741 mel=0.450 spk_ce=0.701
+749 sps 1.324 samp/s 42.37 wait 0.002 peakGB 10.0 cond_ce=0.153 dur=0.964 kl=1.925 loss_g=22.557 mel=0.418 spk_ce=0.697
+774 sps 1.457 samp/s 46.62 wait 0.002 peakGB 9.83 cond_ce=0.154 dur=1.089 kl=2.191 loss_g=23.689 mel=0.435 spk_ce=0.669
+799 sps 1.412 samp/s 45.21 wait 0.002 peakGB 10.2 cond_ce=0.100 dur=1.218 kl=2.248 loss_g=24.017 mel=0.439 spk_ce=0.699
+824 sps 1.498 samp/s 47.93 wait 0.002 peakGB 10.0 cond_ce=0.176 dur=1.011 kl=2.138 loss_g=22.828 mel=0.417 spk_ce=0.730
+849 sps 1.456 samp/s 46.60 wait 0.002 peakGB 10.3 cond_ce=0.164 dur=0.984 kl=1.995 loss_g=22.598 mel=0.417 spk_ce=0.698
+874 sps 1.383 samp/s 44.25 wait 0.002 peakGB 10.3 cond_ce=0.196 dur=1.114 kl=2.258 loss_g=23.346 mel=0.425 spk_ce=0.674
+899 sps 1.341 samp/s 42.93 wait 0.001 peakGB 11.6 cond_ce=0.119 dur=1.111 kl=2.115 loss_g=22.993 mel=0.421 spk_ce=0.720
+924 sps 1.372 samp/s 43.92 wait 0.001 peakGB 11.8 cond_ce=0.074 dur=1.193 kl=2.265 loss_g=23.714 mel=0.433 spk_ce=0.697
+949 sps 1.340 samp/s 42.89 wait 0.001 peakGB 11.8 cond_ce=0.239 dur=0.993 kl=2.185 loss_g=22.565 mel=0.410 spk_ce=0.712
+974 sps 1.468 samp/s 46.98 wait 0.001 peakGB 11.8 cond_ce=0.263 dur=1.089 kl=2.167 loss_g=22.528 mel=0.407 spk_ce=0.698
+999 sps 1.533 samp/s 49.08 wait 0.001 peakGB 11.8 cond_ce=0.563 dur=1.019 kl=2.296 loss_g=24.048 mel=0.433 spk_ce=0.684
+1024 sps 1.157 samp/s 37.03 wait 0.001 peakGB 12.3 cond_ce=0.583 disc=2.405 dur=1.190 fm=12.187 gen=3.391 kl=2.144 loss_g=40.590 mel=0.453 spk_ce=0.709
+1049 sps 1.312 samp/s 41.99 wait 0.002 peakGB 12.3 cond_ce=1.052 disc=2.563 dur=1.195 fm=10.447 gen=3.259 kl=2.112 loss_g=39.830 mel=0.469 spk_ce=0.658
+1074 sps 1.209 samp/s 38.71 wait 0.002 peakGB 11.9 cond_ce=0.412 disc=2.229 dur=1.151 fm=10.853 gen=3.260 kl=2.304 loss_g=39.331 mel=0.459 spk_ce=0.695
+1099 sps 1.345 samp/s 43.06 wait 0.001 peakGB 13.9 cond_ce=0.364 disc=2.237 dur=1.122 fm=11.503 gen=3.167 kl=2.427 loss_g=39.520 mel=0.450 spk_ce=0.689
+1124 sps 1.278 samp/s 40.90 wait 0.001 peakGB 13.8 cond_ce=0.378 disc=2.074 dur=1.139 fm=12.128 gen=3.427 kl=2.297 loss_g=40.782 mel=0.460 spk_ce=0.703
+1149 sps 1.294 samp/s 41.42 wait 0.002 peakGB 13.9 cond_ce=0.593 disc=2.011 dur=1.052 fm=11.794 gen=3.263 kl=2.380 loss_g=40.092 mel=0.452 spk_ce=0.686
+1174 sps 1.311 samp/s 41.96 wait 0.002 peakGB 11.9 cond_ce=1.653 disc=1.827 dur=1.149 fm=13.212 gen=3.484 kl=2.009 loss_g=44.128 mel=0.488 spk_ce=0.652
+1199 sps 1.325 samp/s 42.40 wait 0.001 peakGB 13.9 cond_ce=0.187 disc=1.723 dur=1.206 fm=12.148 gen=3.306 kl=2.425 loss_g=41.040 mel=0.468 spk_ce=0.710
+1224 sps 1.421 samp/s 45.48 wait 0.001 peakGB 13.9 cond_ce=1.019 disc=1.851 dur=1.267 fm=11.347 gen=3.264 kl=2.197 loss_g=41.391 mel=0.480 spk_ce=0.701
+1249 sps 1.281 samp/s 41.00 wait 0.002 peakGB 12.1 cond_ce=1.346 disc=1.974 dur=0.899 fm=11.577 gen=3.233 kl=1.989 loss_g=40.496 mel=0.461 spk_ce=0.699
+1274 sps 1.346 samp/s 43.08 wait 0.001 peakGB 11.9 cond_ce=1.248 disc=2.195 dur=0.999 fm=9.763 gen=3.059 kl=2.086 loss_g=38.902 mel=0.469 spk_ce=0.664
+1299 sps 1.330 samp/s 42.57 wait 0.001 peakGB 12.3 cond_ce=0.685 disc=1.930 dur=1.152 fm=12.008 gen=3.266 kl=2.184 loss_g=41.405 mel=0.476 spk_ce=0.699
+1324 sps 1.400 samp/s 44.81 wait 0.001 peakGB 12.1 cond_ce=1.218 disc=1.961 dur=0.936 fm=11.463 gen=2.977 kl=2.117 loss_g=39.770 mel=0.452 spk_ce=0.736
+1349 sps 1.313 samp/s 42.04 wait 0.001 peakGB 12.4 cond_ce=1.127 disc=2.070 dur=0.936 fm=10.677 gen=3.158 kl=2.152 loss_g=39.371 mel=0.458 spk_ce=0.700
+1374 sps 1.274 samp/s 40.79 wait 0.001 peakGB 12.4 cond_ce=1.010 disc=2.067 dur=1.040 fm=10.542 gen=3.092 kl=2.231 loss_g=39.321 mel=0.461 spk_ce=0.670
+1399 sps 1.311 samp/s 41.98 wait 0.001 peakGB 13.7 cond_ce=0.584 disc=1.946 dur=1.036 fm=11.682 gen=3.257 kl=2.075 loss_g=40.016 mel=0.459 spk_ce=0.722
+1424 sps 1.290 samp/s 41.30 wait 0.001 peakGB 13.9 cond_ce=0.348 disc=1.842 dur=1.147 fm=10.398 gen=3.324 kl=2.137 loss_g=38.992 mel=0.465 spk_ce=0.694
+1449 sps 1.347 samp/s 43.10 wait 0.001 peakGB 13.8 cond_ce=0.803 disc=1.984 dur=0.927 fm=11.429 gen=3.129 kl=2.092 loss_g=39.485 mel=0.453 spk_ce=0.713
+1474 sps 1.316 samp/s 42.12 wait 0.001 peakGB 13.8 cond_ce=0.637 disc=1.897 dur=1.047 fm=10.122 gen=3.003 kl=2.142 loss_g=37.964 mel=0.451 spk_ce=0.701
+1499 sps 1.353 samp/s 43.32 wait 0.001 peakGB 13.8 cond_ce=1.331 disc=2.058 dur=0.958 fm=11.159 gen=3.107 kl=2.170 loss_g=40.328 mel=0.465 spk_ce=0.683
+1524 sps 1.158 samp/s 37.06 wait 0.001 peakGB 12.3 cond_ce=1.181 disc=1.800 dur=1.139 fm=11.135 gen=3.333 kl=1.998 loss_g=40.826 mel=0.474 spk_ce=0.713
+1549 sps 1.328 samp/s 42.51 wait 0.002 peakGB 12.3 cond_ce=1.688 disc=2.028 dur=1.148 fm=10.304 gen=2.984 kl=2.177 loss_g=40.784 mel=0.485 spk_ce=0.652
+1574 sps 1.274 samp/s 40.77 wait 0.001 peakGB 11.9 cond_ce=0.610 disc=1.992 dur=1.098 fm=10.865 gen=3.002 kl=2.193 loss_g=39.256 mel=0.462 spk_ce=0.696
+1599 sps 1.340 samp/s 42.89 wait 0.001 peakGB 13.9 cond_ce=0.413 disc=2.019 dur=1.080 fm=10.299 gen=2.965 kl=2.368 loss_g=38.303 mel=0.455 spk_ce=0.689
+1624 sps 1.287 samp/s 41.19 wait 0.001 peakGB 13.8 cond_ce=0.425 disc=2.037 dur=1.088 fm=10.639 gen=3.011 kl=2.201 loss_g=39.081 mel=0.467 spk_ce=0.702
+1649 sps 1.316 samp/s 42.13 wait 0.001 peakGB 13.9 cond_ce=0.520 disc=2.045 dur=0.997 fm=10.790 gen=2.981 kl=2.170 loss_g=38.814 mel=0.459 spk_ce=0.685
+1674 sps 1.339 samp/s 42.87 wait 0.001 peakGB 11.9 cond_ce=1.501 disc=2.134 dur=1.110 fm=10.480 gen=3.116 kl=2.037 loss_g=40.672 mel=0.484 spk_ce=0.649
+1699 sps 1.362 samp/s 43.58 wait 0.001 peakGB 13.9 cond_ce=0.215 disc=1.849 dur=1.159 fm=10.066 gen=3.049 kl=2.281 loss_g=38.765 mel=0.473 spk_ce=0.710
+1724 sps 1.394 samp/s 44.62 wait 0.002 peakGB 13.9 cond_ce=0.902 disc=1.989 dur=1.218 fm=10.562 gen=3.001 kl=1.957 loss_g=40.423 mel=0.491 spk_ce=0.700
+1749 sps 1.276 samp/s 40.83 wait 0.001 peakGB 12.1 cond_ce=0.891 disc=2.001 dur=0.856 fm=10.465 gen=3.065 kl=2.006 loss_g=38.763 mel=0.462 spk_ce=0.700
+1774 sps 1.297 samp/s 41.50 wait 0.002 peakGB 11.9 cond_ce=0.854 disc=2.127 dur=0.947 fm=9.924 gen=2.846 kl=2.102 loss_g=38.455 mel=0.469 spk_ce=0.660
+1799 sps 1.316 samp/s 42.11 wait 0.002 peakGB 12.3 cond_ce=0.503 disc=1.894 dur=1.098 fm=12.661 gen=2.981 kl=2.140 loss_g=41.834 mel=0.483 spk_ce=0.699
+1824 sps 1.396 samp/s 44.68 wait 0.001 peakGB 12.1 cond_ce=0.727 disc=1.996 dur=0.879 fm=10.332 gen=3.237 kl=2.085 loss_g=38.398 mel=0.453 spk_ce=0.738
+1849 sps 1.371 samp/s 43.89 wait 0.001 peakGB 12.4 cond_ce=0.719 disc=2.080 dur=0.877 fm=10.623 gen=3.005 kl=2.169 loss_g=38.472 mel=0.453 spk_ce=0.700
+1874 sps 1.302 samp/s 41.67 wait 0.001 peakGB 12.4 cond_ce=0.674 disc=2.122 dur=0.991 fm=10.319 gen=3.028 kl=2.060 loss_g=38.430 mel=0.460 spk_ce=0.671
+1899 sps 1.323 samp/s 42.33 wait 0.001 peakGB 13.7 cond_ce=0.384 disc=1.979 dur=0.985 fm=11.447 gen=2.980 kl=2.102 loss_g=39.398 mel=0.462 spk_ce=0.722
+1924 sps 1.344 samp/s 43.00 wait 0.001 peakGB 13.9 cond_ce=0.277 disc=1.807 dur=1.108 fm=10.680 gen=3.232 kl=2.221 loss_g=39.244 mel=0.467 spk_ce=0.693
+1949 sps 1.369 samp/s 43.82 wait 0.001 peakGB 13.8 cond_ce=0.485 disc=2.127 dur=0.874 fm=11.991 gen=2.960 kl=2.145 loss_g=39.720 mel=0.457 spk_ce=0.711
+1974 sps 1.342 samp/s 42.97 wait 0.001 peakGB 13.8 cond_ce=0.423 disc=2.022 dur=1.007 fm=10.087 gen=2.840 kl=2.159 loss_g=37.645 mel=0.454 spk_ce=0.701
+1999 sps 1.373 samp/s 43.93 wait 0.001 peakGB 13.8 cond_ce=0.861 disc=2.057 dur=0.925 fm=11.019 gen=2.979 kl=2.206 loss_g=40.020 mel=0.474 spk_ce=0.682

@@ -1,0 +1,6 @@
+coqui-bs	2/391	coqui-bs-3b6b45d36dbb-r0 coqui-bs-71b0184817e0-r0
+mms-kn	2/323	mms-kn-570edd6ddb87-r0 mms-kn-86d965701763-r1
+4 of 63454 records differ from a fresh phonemization
+stage-a-gen,check-ids-tolerant,7.9,0
+12G	/workspace/teacher-stage-a/shards
+136.97 kept hours

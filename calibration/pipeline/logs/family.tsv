@@ -1,0 +1,104 @@
+ca_ES-upc_ona-x_low	x_low	none
+ca_ES-upc_pau-x_low	x_low	none
+es_ES-carlfm-x_low	x_low	none
+it_IT-riccardo-x_low	x_low	none
+model	medium	none
+model	medium	none
+model	medium	none
+model	medium	none
+model	medium	none
+model	medium	none
+model	medium	none
+model	medium	none
+model	medium	none
+model	medium	none
+model	medium	none
+model	medium	none
+nl_BE-nathalie-x_low	x_low	none
+nl_BE-rdh-x_low	x_low	none
+uk_UA-lada-x_low	x_low	none
+sv_SE-alma-medium	medium	0.002	6218496
+sv_SE-nst-medium	medium	0.002	6218496
+is_IS-ugla-medium	medium	0.016	6218496
+is_IS-steinn-medium	medium	0.018	6218496
+eu_ES-maider-medium	medium	0.020	6218496
+is_IS-bui-medium	medium	0.020	6218496
+is_IS-salka-medium	medium	0.020	6218496
+nl_BE-rdh-medium	medium	0.020	6218496
+de_DE-karlsson-low	low	0.024	6218496
+el_GR-rapunzelina-low	low	0.025	6218496
+eu_ES-antton-medium	medium	0.025	6218496
+fi_FI-harri-low	low	0.025	6218496
+ko_KO-kss_low	low	0.027	6218496
+uk_UA-ukrainian_tts-medium	medium	0.037	6218496
+fr_FR-mls-medium	medium	0.038	6218496
+es_AR-daniela-high	high	0.092	6218496
+cs_CZ-jirka-low	low	0.100	6218496
+el_GR-rapunzelina-medium	medium	0.108	6218496
+ar_JO-kareem-low	low	0.110	6218496
+sl_SI-artur-medium	medium	0.130	6218496
+te_IN-venkatesh-medium	medium	0.318	6218496
+te_IN-padmavathi-medium	medium	0.334	6218496
+de_DE-thorsten_emotional-medium	medium	0.361	6218496
+hi_IN-pratham-medium	medium	0.397	6218496
+fa_IR-ganji_adabi-medium	medium	0.398	6218496
+lv_LV-aivars-medium	medium	0.400	6218496
+hi_IN-priyamvada-medium	medium	0.409	6218496
+fa_IR-ganji-medium	medium	0.424	6218496
+de_DE-thorsten-medium	medium	0.443	6218496
+fr_FR-tom-medium	medium	0.452	6218496
+ru_RU-irina-medium	medium	0.466	6218496
+vi_VN-vais1000-medium	medium	0.469	6218496
+fr_FR-upmc-medium	medium	0.482	6218496
+te_IN-maya-medium	medium	0.509	6218496
+fr_FR-siwis-medium	medium	0.540	6218496
+es_MX-claude-high	high	0.547	6218496
+en_GB-northern_english_male-medium	medium	0.548	6218496
+no_NO-talesyntese-medium	medium	0.568	6218496
+es_MX-ald-medium	medium	0.571	6218496
+en_US-joe-medium	medium	0.575	6218496
+sk_SK-lili-medium	medium	0.587	6218496
+en_GB-alba-medium	medium	0.588	6218496
+nl_NL-alex-medium	medium	0.595	6218496
+pl_PL-mc_speech-medium	medium	0.597	6218496
+en_US-hfc_male-medium	medium	0.598	6218496
+ur_PK-fasih-medium	medium	0.604	6218496
+pt_BR-faber-medium	medium	0.610	6218496
+ml_IN-arjun-medium	medium	0.624	6218496
+ar_JO-kareem-medium	medium	0.627	6218496
+fi_FI-harri-medium	medium	0.636	6218496
+hi_IN-rohan-medium	medium	0.642	6218496
+nl_BE-nathalie-medium	medium	0.649	6218496
+ru_RU-ruslan-medium	medium	0.649	6218496
+en_GB-jenny_dioco-medium	medium	0.654	6218496
+id_ID-news_tts-medium	medium	0.662	6218496
+sq_AL-edon-medium	medium	0.668	6218496
+en_GB-alan-medium	medium	0.672	6218496
+ca_ES-upc_ona-medium	medium	0.673	6218496
+da_DK-talesyntese-medium	medium	0.679	6218496
+hu_HU-imre-medium	medium	0.683	6218496
+ka_GE-natia-medium	medium	0.684	6218496
+sr_RS-serbski_institut-medium	medium	0.686	6218496
+es_ES-davefx-medium	medium	0.688	6218496
+es_ES-sharvard-medium	medium	0.693	6218496
+hu_HU-anna-medium	medium	0.694	6218496
+ro_RO-mihai-medium	medium	0.695	6218496
+sw_CD-lanfrica-medium	medium	0.704	6218496
+bg_BG-dimitar-medium	medium	0.711	6218496
+pt_PT-tugão-medium	medium	0.726	6218496
+en_US-hfc_female-medium	medium	0.730	6218496
+pt_BR-jeff-medium	medium	0.736	6218496
+en_US-amy-medium	medium	0.739	6218496
+ru_RU-denis-medium	medium	0.744	6218496
+nl_NL-ronnie-medium	medium	0.746	6218496
+pt_BR-cadu-medium	medium	0.754	6218496
+tr_TR-dfki-medium	medium	0.756	6218496
+ru_RU-dmitri-medium	medium	0.758	6218496
+nl_NL-pim-medium	medium	0.762	6218496
+pl_PL-gosia-medium	medium	0.774	6218496
+pl_PL-darkman-medium	medium	0.781	6218496
+ml_IN-meera-medium	medium	0.786	6218496
+hu_HU-berta-medium	medium	0.799	6218496
+cs_CZ-jirka-medium	medium	0.808	6218496
+fa_IR-reza_ibrahim-medium	medium	0.849	6218496
+pl_PL-jarvis_wg_glos-medium	medium	0.918	6218496

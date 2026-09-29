@@ -1,0 +1,15 @@
+setup                5.7 min
+qualify              0.2 min
+fetch                0.2 min
+pull               152.0 min
+setup2               1.6 min
+qualify2             0.2 min
+smoke-train         62.4 min
+smoke-eval          13.0 min
+smoke-gen            0.8 min
+full-gen             1.4 min
+stage-a-gen         56.0 min
+stage-a-train       18.8 min
+transfer            12.7 min
+run1-pull            1.0 min
+run1-eval           53.4 min

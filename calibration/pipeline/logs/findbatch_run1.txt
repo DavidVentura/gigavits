@@ -1,0 +1,3 @@
+batch 16: 2.99 steps/s (incl. startup), 47.8 samples/s, peak 10.88 GB
+batch 24: 2.76 steps/s (incl. startup), 66.3 samples/s, peak 14.71 GB
+batch 32: 2.38 steps/s (incl. startup), 76.3 samples/s, peak 18.30 GB

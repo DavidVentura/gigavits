@@ -1,0 +1,21 @@
+# CPU variant of eval_box.toml for scoring next to a training run that fills the GPU.
+threads = 4
+
+[metrics.cer]
+model = { hub = "small" }
+device = "cpu"
+compute_type = "int8"
+beam_size = 5
+
+[metrics.lid]
+model = { hub = "speechbrain/lang-id-voxlingua107-ecapa" }
+device = "cpu"
+savedir = "/workspace/evalmodels/lang-id-voxlingua107-ecapa"
+
+[metrics.speaker]
+model = { hub = "speechbrain/spkrec-ecapa-voxceleb" }
+device = "cpu"
+savedir = "/workspace/evalmodels/spkrec-ecapa-voxceleb"
+reference_utterances = 10
+
+[metrics.quality]

@@ -1,0 +1,4 @@
+56 front ends : languages   1: median step 248 ms
+56 front ends : languages   4: median step 627 ms
+56 front ends --fused: languages   1: median step 229 ms
+56 front ends --fused: languages   4: median step 583 ms

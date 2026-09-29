@@ -1,0 +1,4 @@
+languages   1: median step 219 ms
+languages   5: median step 670 ms
+languages  16: median step 2094 ms
+languages  32: median step 4222 ms

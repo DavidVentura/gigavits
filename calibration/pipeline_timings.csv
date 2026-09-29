@@ -1,0 +1,100 @@
+section,command,seconds,where
+setup,upload repo+espeak-ng-data (rsync),46,laptop
+qualify,bf16 matmul 15s (165 TFLOPS),15,laptop
+fetch,lessac ckpt 846MB from HF (62 MB/s),14,laptop
+pull,render-init WAVs to laptop,58,laptop
+setup2,upload repo to training host (rsync),19,laptop
+qualify2,bf16 matmul 10s on 7950X host (166 TFLOPS),10,laptop
+pull,render-warmup+init WAVs to laptop,51,laptop
+smoke-train,cudnn A/B warmup 80 steps benchmark off (83 s) vs on (172 s),255,laptop
+smoke-train,prof_langs step time vs languages per batch (4 runs),420,laptop
+setup,family check: lessac cosine of 104 voice ONNX,60,laptop
+smoke-eval,score eval-2000 held-out renders (Whisper/PER/LID/ECAPA/UTMOS on GPU incl. model downloads),201,laptop
+pull,weights-10000.pt (916 MB bf16) + logs to laptop,785,laptop
+pull,full-25000.ckpt (5.7 GB) to laptop,3125,laptop
+pull,weights-20000/30000/40000 + eval-teacher + logs to laptop,1267,laptop
+pull,full-50000.ckpt (5.7 GB) to laptop,3836,laptop
+setup,apt,45.1,box1-epyc7742
+setup,rustup,12.4,box1-epyc7742
+setup,uv,2.1,box1-epyc7742
+setup,clone-piper-rs,9.7,box1-epyc7742
+setup,venv-generate,5.4,box1-epyc7742
+setup,venv-train (exit 1),0.8,box1-epyc7742
+setup,build-teacher-rt,91.0,box1-epyc7742
+smoke-gen,fetch-check,3.0,box1-epyc7742
+smoke-gen,fetch,17.6,box1-epyc7742
+smoke-gen,plan (exit 1),0.3,box1-epyc7742
+setup,venv-train,54.4,box1-epyc7742
+setup,mas-kernel,7.5,box1-epyc7742
+full-gen,fetch-check,7.4,box1-epyc7742
+setup,venv-eval,7.8,box1-epyc7742
+full-gen,fetch,74.6,box1-epyc7742
+smoke-gen,plan (exit 1),0.3,box1-epyc7742
+full-gen,fetch-configs,1.7,box1-epyc7742
+full-gen,plan,0.3,box1-epyc7742
+smoke-gen,all-generate-package-verify,27.0,box1-epyc7742
+smoke-train,prepare,11.2,box1-epyc7742
+smoke-train,init,63.2,box1-epyc7742
+smoke-train,render-init,27.8,box1-epyc7742
+smoke-train,warmup-300 (exit 1),141.2,box1-epyc7742
+smoke-train,find-batch-nobench,134.4,box1-epyc7742
+smoke-train,find-batch-bench,160.4,box1-epyc7742
+smoke-train,warmup-300,219.8,box1-epyc7742
+smoke-train,render-warmup,15.3,box1-epyc7742
+smoke-train,train-2000,1500.5,box1-epyc7742
+smoke-train,resume-2000-2300,642.7,box1-epyc7742
+smoke-train,export-onnx,103.8,box1-epyc7742
+smoke-train,render-2300,47.3,box1-epyc7742
+smoke-eval,score-student-render-init,88.3,box1-epyc7742
+smoke-eval,score-student-render-warmup,83.6,box1-epyc7742
+smoke-eval,score-student-render-2300,92.4,box1-epyc7742
+smoke-eval,score-teacher,312.2,box1-epyc7742
+stage-a-gen,all-generate-package-verify (exit 1),3353.3,box1-epyc7742
+stage-a-gen,check-ids-tolerant,7.9,box1-epyc7742
+stage-a-train,prepare,28.7,box1-epyc7742
+stage-a-train,init,20.2,box1-epyc7742
+stage-a-train,render-init,116.7,box1-epyc7742
+stage-a-train,prepare,28.9,box1-epyc7742
+stage-a-train,init,20.6,box1-epyc7742
+stage-a-train,render-init,118.8,box1-epyc7742
+stage-a-train,warmup-3000 (exit 1),64.6,box1-epyc7742
+transfer,shards-12GB-box-to-box (exit 10),393.6,box1-epyc7742
+stage-a-train,warmup-3000 (exit 1),177.1,box1-epyc7742
+transfer,shards-resume,269.0,box1-epyc7742
+stage-a-train,held-out-ids,2.2,box1-epyc7742
+transfer,run1-init-to-train-host,99.2,box1-epyc7742
+setup2,apt,16.8,box2-7950x
+setup2,uv,0.8,box2-7950x
+setup2,venv-train,21.8,box2-7950x
+setup2,mas-kernel,3.5,box2-7950x
+setup2,venv-eval,32.3,box2-7950x
+stage-a-train,find-batch-7950x (exit 1),7.7,box2-7950x
+stage-a-train,find-batch-7950x,51.2,box2-7950x
+stage-a-train,warmup-3000,321.2,box2-7950x
+stage-a-train,render-warmup,42.8,box2-7950x
+stage-a-train,train-attempt-1 (exit 1),33.9,box2-7950x
+stage-a-train,train-attempt-1 (exit 1),90.6,box2-7950x
+run1-pull,weights-10000,6.1,box2-7950x
+run1-pull,weights-20000,6.1,box2-7950x
+run1-eval,export-25000,35.4,box2-7950x
+run1-eval,render-25000,82.9,box2-7950x
+run1-eval,score-25000 (exit 1),220.3,box2-7950x
+run1-eval,score-teacher (exit 1),0.9,box2-7950x
+run1-eval,export-25000,34.7,box2-7950x
+run1-eval,render-25000,85.6,box2-7950x
+run1-eval,score-25000,582.3,box2-7950x
+run1-eval,score-teacher,777.4,box2-7950x
+run1-pull,weights-30000,5.9,box2-7950x
+run1-pull,weights-40000,6.1,box2-7950x
+run1-pull,weights-50000,6.1,box2-7950x
+run1-eval,export-50000,35.1,box2-7950x
+run1-eval,render-50000,81.0,box2-7950x
+run1-eval,score-50000,577.5,box2-7950x
+run1-pull,weights-60000,6.0,box2-7950x
+run1-pull,weights-70000,6.1,box2-7950x
+run1-pull,weights-80000,6.1,box2-7950x
+run1-pull,weights-90000,6.2,box2-7950x
+run1-pull,weights-100000,6.1,box2-7950x
+run1-eval,export-100000,35.2,box2-7950x
+run1-eval,render-100000,80.8,box2-7950x
+run1-eval,score-100000,574.0,box2-7950x

@@ -1,0 +1,9 @@
+49 sps 2.919 samp/s 70.06 wait 0.003 peakGB 14.8 dur=1.589 kl=28.497 loss=30.086
+99 sps 3.832 samp/s 91.97 wait 0.004 peakGB 16.8 dur=2.730 kl=16.053 loss=18.783
+149 sps 3.983 samp/s 95.60 wait 0.005 peakGB 18.9 dur=1.496 kl=12.006 loss=13.502
+199 sps 4.245 samp/s 101.8 wait 0.005 peakGB 19.6 dur=2.756 kl=25.850 loss=28.606
+249 sps 4.016 samp/s 96.38 wait 0.005 peakGB 20.6 dur=1.923 kl=21.569 loss=23.492
+299 sps 4.159 samp/s 99.83 wait 0.005 peakGB 20.5 dur=1.476 kl=20.749 loss=22.225
+349 sps 4.317 samp/s 103.6 wait 0.005 peakGB 20.6 dur=1.616 kl=27.304 loss=28.920
+399 sps 4.248 samp/s 101.9 wait 0.005 peakGB 20.5 dur=1.392 kl=15.685 loss=17.077
+449 sps 3.970 samp/s 95.30 wait 0.005 peakGB 20.7 dur=1.653 kl=11.545 loss=13.198

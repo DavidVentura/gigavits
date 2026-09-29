@@ -1,0 +1,21 @@
+# Checkpoint scoring on the box: Whisper CER, language ID, speaker similarity, UTMOS/DNSMOS (no phoneme model).
+threads = 8
+
+[metrics.cer]
+model = { hub = "small" }
+device = "cuda"
+compute_type = "int8_float16"
+beam_size = 5
+
+[metrics.lid]
+model = { hub = "speechbrain/lang-id-voxlingua107-ecapa" }
+device = "cuda"
+savedir = "/workspace/evalmodels/lang-id-voxlingua107-ecapa"
+
+[metrics.speaker]
+model = { hub = "speechbrain/spkrec-ecapa-voxceleb" }
+device = "cuda"
+savedir = "/workspace/evalmodels/spkrec-ecapa-voxceleb"
+reference_utterances = 10
+
+[metrics.quality]
